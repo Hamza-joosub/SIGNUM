@@ -54,12 +54,12 @@ def _ensure_data_loaded():
 
     try:
         print("[coldstart] Fetching yfinance prices…")
-        _global_prices = get_prices(TICKERS, start="2009-01-01")
+        _global_prices = get_prices(TICKERS, start="2018-01-01")
 
         print("[coldstart] Fetching COT data…")
-        df_fin_raw  = get_financial_cot_data(years=[2020, 2021, 2022, 2023, 2024, 2025])
+        df_fin_raw  = get_financial_cot_data(years=[2023, 2024, 2025])
         df_fin      = process_financial_cot(df_fin_raw)
-        df_comm_raw = get_commodities_cot_data(years=[2020, 2021, 2022, 2023, 2024, 2025])
+        df_comm_raw = get_commodities_cot_data(years=[2023, 2024, 2025])
         df_comm     = process_commodities_cot(df_comm_raw)
         _global_cot = pd.concat([df_fin, df_comm], ignore_index=True)
 
