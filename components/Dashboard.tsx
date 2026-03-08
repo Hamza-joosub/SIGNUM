@@ -51,9 +51,9 @@ export default function Dashboard({ onClose }: { onClose: () => void }) {
     const [activeTab, setActiveTab] = useState('hydro');
     const [cache, setCache] = useState<DataCache>({});
     const [loading, setLoading] = useState(false);
-    const [precomputed, setPrecomputed] = useState<Record<string, Asset[]> | null>(null);
+    const [preloaded, setPreloaded] = useState(false); // true once precomputed JSON loaded
 
-    /** Build all four tab bundles from the pre-computed single asset list */
+    /** Derive all four tab bundles from a single pressure asset list */
     function bundleFromAssets(dateStr: string, assets: Asset[]): DateBundle {
         return {
             pressure: { date: dateStr, assets },
@@ -63,57 +63,57 @@ export default function Dashboard({ onClose }: { onClose: () => void }) {
         };
     }
 
-    /** Load entire precomputed JSON once on mount */
+    /**
+     * Fetch a single date from the live API.
+     * ONE request only (/api/pressure) — it already contains all fields
+     * (momentum_norm, volume_norm, relative_norm) so we derive the other
+     * tab bundles client-side. This avoids 3 extra parallel cold starts.
+     */
+    async function fetchFromApi(dateStr: string) {
+        if (cache[dateStr]) return; // already have it
+        setLoading(true);
+        try {
+            const res = await fetch(`/api/pressure?date=${dateStr}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const pressure = await res.json();
+            const assets: Asset[] = pressure.assets ?? [];
+            setCache(prev => ({ ...prev, [dateStr]: bundleFromAssets(dateStr, assets) }));
+        } catch (e) {
+            console.error('[Dashboard] API fetch failed:', e);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    /** Try to load pre-built JSON. Falls back to live API silently. */
     useEffect(() => {
         fetch('/precomputed_results.json')
-            .then(r => r.ok ? r.json() : Promise.reject())
+            .then(r => r.ok ? r.json() : Promise.reject('not found'))
             .then((json: { data: Record<string, Asset[]> }) => {
-                setPrecomputed(json.data);
-                // Pre-populate full cache from the JSON
                 const fullCache: DataCache = {};
                 for (const [d, assets] of Object.entries(json.data)) {
                     fullCache[d] = bundleFromAssets(d, assets as Asset[]);
                 }
                 setCache(fullCache);
+                setPreloaded(true);
                 setLoading(false);
             })
             .catch(() => {
-                // Precomputed data not available (local dev) — fall back to live API
-                fetchFromApi(RANGE_END);
+                // Precomputed JSON not available — initial load via API
+                setPreloaded(true); // mark as done so date-change effect unblocks
+                fetchFromApi(activeDate);
             });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    /** Live API fallback (used in local dev or for dates not in precomputed data) */
-    async function fetchFromApi(dateStr: string) {
-        if (cache[dateStr]) return;
-        setLoading(true);
-        try {
-            const [pressure, momentum, volume, returns] = await Promise.all([
-                fetch(`/api/pressure?date=${dateStr}`).then(r => r.json()),
-                fetch(`/api/momentum?date=${dateStr}`).then(r => r.json()),
-                fetch(`/api/volume?date=${dateStr}`).then(r => r.json()),
-                fetch(`/api/returns?date=${dateStr}`).then(r => r.json()),
-            ]);
-            setCache(prev => ({ ...prev, [dateStr]: { pressure, momentum, volume, returns } }));
-        } catch { /* silent */ }
-        finally { setLoading(false); }
-    }
-
-    /** On date change: instant if precomputed, otherwise API */
+    /** On date change: if cache has it → instant, else fetch via API */
     useEffect(() => {
-        if (!precomputed) {
-            // Still loading precomputed data — wait
-            if (Object.keys(cache).length === 0) setLoading(true);
-            return;
-        }
-        // If precomputed data available, all dates are already in cache
-        // If somehow missing, try the API
-        if (!cache[activeDate] && precomputed[activeDate]) {
-            setCache(prev => ({ ...prev, [activeDate]: bundleFromAssets(activeDate, precomputed[activeDate]) }));
-        } else if (!cache[activeDate]) {
+        if (!preloaded) return; // wait for initial precomputed check to finish
+        if (!cache[activeDate]) {
             fetchFromApi(activeDate);
         }
-    }, [activeDate, precomputed]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeDate, preloaded]);
 
     const bundle = cache[activeDate];
 
