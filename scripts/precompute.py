@@ -14,6 +14,11 @@ from datetime import datetime, timedelta
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
+# Redirect yfinance cache to /tmp — writable on all environments including
+# Vercel's read-only build filesystem (suppresses CookieCache/TzCache warnings)
+import yfinance as yf
+yf.set_tz_cache_location('/tmp/yfinance_cache')
+
 from Models.Capital_pressure import (
     get_prices, get_financial_cot_data, process_financial_cot,
     get_commodities_cot_data, process_commodities_cot,
