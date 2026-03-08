@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "pip3 install -r requirements.txt && python3 scripts/precompute.py",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

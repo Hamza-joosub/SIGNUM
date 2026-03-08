@@ -28,7 +28,7 @@ function clamp(dateStr: string, min: string, max: string): string {
     return dateStr;
 }
 
-const RANGE_START = '2020-01-03';
+const RANGE_START = '2018-01-05';
 const today = new Date();
 const dow = today.getDay();
 const offset = dow >= 5 ? dow - 5 : dow + 2;
@@ -51,10 +51,41 @@ export default function Dashboard({ onClose }: { onClose: () => void }) {
     const [activeTab, setActiveTab] = useState('hydro');
     const [cache, setCache] = useState<DataCache>({});
     const [loading, setLoading] = useState(false);
+    const [precomputed, setPrecomputed] = useState<Record<string, Asset[]> | null>(null);
 
-    /* Batch-fetch all endpoints for a given date */
-    async function fetchDate(dateStr: string) {
-        if (cache[dateStr]) return; // already cached
+    /** Build all four tab bundles from the pre-computed single asset list */
+    function bundleFromAssets(dateStr: string, assets: Asset[]): DateBundle {
+        return {
+            pressure: { date: dateStr, assets },
+            momentum: { date: dateStr, assets: assets.map(a => ({ label: a.label, score: a.momentum_norm ?? 0 })) },
+            volume: { date: dateStr, assets: assets.map(a => ({ label: a.label, z_score: a.volume_norm ?? 0 })) },
+            returns: { date: dateStr, assets: assets.map(a => ({ label: a.label, return_pct: a.relative_norm ?? 0 })) },
+        };
+    }
+
+    /** Load entire precomputed JSON once on mount */
+    useEffect(() => {
+        fetch('/precomputed_results.json')
+            .then(r => r.ok ? r.json() : Promise.reject())
+            .then((json: { data: Record<string, Asset[]> }) => {
+                setPrecomputed(json.data);
+                // Pre-populate full cache from the JSON
+                const fullCache: DataCache = {};
+                for (const [d, assets] of Object.entries(json.data)) {
+                    fullCache[d] = bundleFromAssets(d, assets as Asset[]);
+                }
+                setCache(fullCache);
+                setLoading(false);
+            })
+            .catch(() => {
+                // Precomputed data not available (local dev) — fall back to live API
+                fetchFromApi(RANGE_END);
+            });
+    }, []);
+
+    /** Live API fallback (used in local dev or for dates not in precomputed data) */
+    async function fetchFromApi(dateStr: string) {
+        if (cache[dateStr]) return;
         setLoading(true);
         try {
             const [pressure, momentum, volume, returns] = await Promise.all([
@@ -68,26 +99,21 @@ export default function Dashboard({ onClose }: { onClose: () => void }) {
         finally { setLoading(false); }
     }
 
-    /* Fetch primary date on mount / date change */
-    useEffect(() => { fetchDate(activeDate); }, [activeDate]);
-
-    /* Silently pre-fetch ±2 weeks after primary loads */
+    /** On date change: instant if precomputed, otherwise API */
     useEffect(() => {
-        if (loading) return;
-        [-2, -1, 1, 2].forEach(w => {
-            const adj = clamp(addWeeks(activeDate, w), RANGE_START, RANGE_END);
-            if (!cache[adj]) {
-                Promise.all([
-                    fetch(`/api/pressure?date=${adj}`).then(r => r.json()),
-                    fetch(`/api/momentum?date=${adj}`).then(r => r.json()),
-                    fetch(`/api/volume?date=${adj}`).then(r => r.json()),
-                    fetch(`/api/returns?date=${adj}`).then(r => r.json()),
-                ]).then(([pressure, momentum, volume, returns]) =>
-                    setCache(prev => ({ ...prev, [adj]: { pressure, momentum, volume, returns } }))
-                ).catch(() => { /* prefetch failure — silent */ });
-            }
-        });
-    }, [activeDate, loading]);
+        if (!precomputed) {
+            // Still loading precomputed data — wait
+            if (Object.keys(cache).length === 0) setLoading(true);
+            return;
+        }
+        // If precomputed data available, all dates are already in cache
+        // If somehow missing, try the API
+        if (!cache[activeDate] && precomputed[activeDate]) {
+            setCache(prev => ({ ...prev, [activeDate]: bundleFromAssets(activeDate, precomputed[activeDate]) }));
+        } else if (!cache[activeDate]) {
+            fetchFromApi(activeDate);
+        }
+    }, [activeDate, precomputed]);
 
     const bundle = cache[activeDate];
 

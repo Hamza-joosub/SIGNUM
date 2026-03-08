@@ -56,4 +56,5 @@ cache/
 # ── Misc ──────────────────────────────────────────────
 *.log
 .vercel
-html files/
+# ── Generated at build time ───────────────────────────────────────────────
+public/precomputed_results.json
