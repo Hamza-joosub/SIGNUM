@@ -8,6 +8,7 @@ sys.path.append(project_root)
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from functools import lru_cache
+from typing import Optional
 
 from Models.Capital_pressure import (
     get_prices, build_date_index,
@@ -61,7 +62,7 @@ def _ensure_data_loaded():
     print("[coldstart] Done.")
 
 @lru_cache(maxsize=32)
-def _cached_run(date_str: str | None):
+def _cached_run(date_str: Optional[str]):
     """Cache model runs — instant on repeated date requests within the same warm instance."""
     return run_universe(_global_prices, _global_cot, window_label="3M", as_of_date=date_str)
 
