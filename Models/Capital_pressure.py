@@ -639,41 +639,42 @@ def run_universe(prices, df_cot_all, window_label='3M', as_of_date=None):
 
 # ── RUN ────────────────────────────────────────────────────────────────────────
 
-# --- Load prices ---
-prices = get_prices(TICKERS, start='2009-01-01')
-print(f"Prices loaded: {prices.index[0].date()} → {prices.index[-1].date()}")
+if __name__ == "__main__":
+    # --- Load prices ---
+    prices = get_prices(TICKERS, start='2009-01-01')
+    print(f"Prices loaded: {prices.index[0].date()} → {prices.index[-1].date()}")
 
-# --- Build date index for slider ---
-date_index = build_date_index(prices)
-print(f"{len(date_index)} weekly snapshots available")
-print(f"Range: {date_index[0].date()} → {date_index[-1].date()}")
+    # --- Build date index for slider ---
+    date_index = build_date_index(prices)
+    print(f"{len(date_index)} weekly snapshots available")
+    print(f"Range: {date_index[0].date()} → {date_index[-1].date()}")
 
-# --- Load COT data ---
-df_cot_raw       = get_financial_cot_data(years=[2020, 2021, 2022, 2023, 2024, 2025])
-df_cot_fin       = process_financial_cot(df_cot_raw)
+    # --- Load COT data ---
+    df_cot_raw       = get_financial_cot_data(years=[2020, 2021, 2022, 2023, 2024, 2025])
+    df_cot_fin       = process_financial_cot(df_cot_raw)
 
-df_cot_comm_raw  = get_commodities_cot_data(years=[2020, 2021, 2022, 2023, 2024, 2025])
-df_cot_comm      = process_commodities_cot(df_cot_comm_raw)
+    df_cot_comm_raw  = get_commodities_cot_data(years=[2020, 2021, 2022, 2023, 2024, 2025])
+    df_cot_comm      = process_commodities_cot(df_cot_comm_raw)
 
-df_cot_all       = pd.concat([df_cot_fin, df_cot_comm], ignore_index=True)
-print(f"COT data loaded: {df_cot_all['date'].min().date()} → {df_cot_all['date'].max().date()}")
+    df_cot_all       = pd.concat([df_cot_fin, df_cot_comm], ignore_index=True)
+    print(f"COT data loaded: {df_cot_all['date'].min().date()} → {df_cot_all['date'].max().date()}")
 
-# --- Latest snapshot (default) ---
-df_scores = run_universe(prices, df_cot_all, window_label='3M')
-print("\n── LATEST SNAPSHOT ──")
-print(df_scores[['label', 'pressure_score', 'direction', 'confidence', 'positioning_z', 'contrarian_position']].to_string())
+    # --- Latest snapshot (default) ---
+    df_scores = run_universe(prices, df_cot_all, window_label='3M')
+    print("\n── LATEST SNAPSHOT ──")
+    print(df_scores[['label', 'pressure_score', 'direction', 'confidence', 'positioning_z', 'contrarian_position']].to_string())
 
-# --- Historical replay examples ---
-df_covid      = run_universe(prices, df_cot_all, window_label='3M', as_of_date='2020-03-20')
-df_peak_hike  = run_universe(prices, df_cot_all, window_label='3M', as_of_date='2022-10-14')
-df_ai_rally   = run_universe(prices, df_cot_all, window_label='3M', as_of_date='2023-11-03')
+    # --- Historical replay examples ---
+    df_covid      = run_universe(prices, df_cot_all, window_label='3M', as_of_date='2020-03-20')
+    df_peak_hike  = run_universe(prices, df_cot_all, window_label='3M', as_of_date='2022-10-14')
+    df_ai_rally   = run_universe(prices, df_cot_all, window_label='3M', as_of_date='2023-11-03')
 
-print("\n── COVID CRASH (2020-03-20) ──")
-print(df_covid[['label', 'pressure_score', 'direction', 'confidence', 'positioning_z', 'contrarian_position']].to_string())
+    print("\n── COVID CRASH (2020-03-20) ──")
+    print(df_covid[['label', 'pressure_score', 'direction', 'confidence', 'positioning_z', 'contrarian_position']].to_string())
 
-print("\n── PEAK RATE HIKE CYCLE (2022-10-14) ──")
-print(df_peak_hike[['label', 'pressure_score', 'direction', 'confidence', 'positioning_z', 'contrarian_position']].to_string())
+    print("\n── PEAK RATE HIKE CYCLE (2022-10-14) ──")
+    print(df_peak_hike[['label', 'pressure_score', 'direction', 'confidence', 'positioning_z', 'contrarian_position']].to_string())
 
-print("\n── AI RALLY (2023-11-03) ──")
-print(df_ai_rally[['label', 'pressure_score', 'direction', 'confidence', 'positioning_z', 'contrarian_position']].to_string())
+    print("\n── AI RALLY (2023-11-03) ──")
+    print(df_ai_rally[['label', 'pressure_score', 'direction', 'confidence', 'positioning_z', 'contrarian_position']].to_markdown())
 
