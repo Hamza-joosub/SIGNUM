@@ -1,0 +1,2133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QuantLab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;1,9..144,300&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+
+/* =====================================================
+   RESET & BASE
+   ===================================================== */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: #080d18;
+  color: #eae6de;
+  overflow: hidden;
+  height: 100vh;
+}
+
+/* =====================================================
+   AMBIENT BACKGROUND
+   ===================================================== */
+.bg-canvas {
+  position: fixed; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 55% 45% at 78% 15%, rgba(200,169,110,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 55% at 12% 85%, rgba(74,110,74,0.08) 0%, transparent 55%),
+    radial-gradient(ellipse 80% 80% at 50% 50%, rgba(10,20,45,0.92) 0%, #080d18 100%);
+}
+
+/* =====================================================
+   APP SHELL
+   ===================================================== */
+.app {
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  height: 100vh;
+}
+
+/* =====================================================
+   TOPBAR
+   ===================================================== */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 32px;
+  height: 58px;
+  background: rgba(8,13,24,0.75);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border-bottom: 1px solid rgba(200,169,110,0.18);
+  flex-shrink: 0;
+}
+
+.topbar-brand {
+  display: flex; align-items: center; gap: 10px;
+}
+.brand-mark {
+  width: 30px; height: 30px;
+  background: linear-gradient(135deg, rgba(200,169,110,0.2), rgba(200,169,110,0.05));
+  border: 1px solid rgba(200,169,110,0.35);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Fraunces', serif;
+  font-size: 13px; font-weight: 600; color: #c8a96e;
+}
+.brand-name {
+  font-family: 'Fraunces', serif;
+  font-size: 17px; font-weight: 600;
+  color: #eae6de; letter-spacing: -0.01em;
+}
+.brand-name span { color: #c8a96e; }
+
+.topbar-right {
+  display: flex; align-items: center; gap: 12px;
+}
+.topbar-meta {
+  font-size: 11px; color: rgba(255,255,255,0.22);
+  display: flex; align-items: center; gap: 6px;
+}
+.live-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: #8ab870;
+  box-shadow: 0 0 6px rgba(138,184,112,0.5);
+  animation: pulse 2.5s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+.topbar-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: linear-gradient(135deg, #c8a96e, #a8883e);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; color: #080d18;
+  cursor: pointer;
+}
+
+/* =====================================================
+   TAB SWITCHER
+   ===================================================== */
+.tab-bar {
+  display: flex; align-items: center;
+  padding: 0 32px;
+  height: 48px;
+  background: rgba(255,255,255,0.02);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.tab {
+  padding: 0 20px;
+  height: 36px;
+  display: flex; align-items: center; gap: 7px;
+  font-size: 12px; font-weight: 500;
+  color: rgba(255,255,255,0.32);
+  cursor: pointer;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+  position: relative;
+  user-select: none;
+}
+.tab:hover {
+  color: rgba(255,255,255,0.65);
+  background: rgba(255,255,255,0.04);
+}
+.tab.active {
+  background: linear-gradient(135deg, #c8a96e, #a8883e);
+  color: #080d18;
+  font-weight: 700;
+  border-color: transparent;
+  box-shadow: 0 2px 12px rgba(200,169,110,0.2);
+}
+.tab-icon { font-size: 13px; line-height: 1; }
+.tab-badge {
+  font-size: 9px; padding: 2px 6px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+.tab.active .tab-badge {
+  background: rgba(8,13,24,0.2);
+  border-color: rgba(8,13,24,0.15);
+  color: rgba(8,13,24,0.6);
+}
+
+/* =====================================================
+   PAGE CONTENT AREA
+   ===================================================== */
+.page-area {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+}
+
+.tab-page {
+  display: none;
+  height: 100%;
+  padding: 36px 32px;
+  animation: fadeIn 0.25s ease;
+}
+.tab-page.active { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Page header shared style */
+.page-header { margin-bottom: 32px; }
+.page-title {
+  font-family: 'Fraunces', serif;
+  font-size: 28px; font-weight: 300;
+  color: #eae6de; letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.page-title em {
+  font-style: italic; color: #c8a96e;
+}
+.page-subtitle {
+  font-size: 13px; color: rgba(255,255,255,0.28);
+  margin-top: 6px; font-weight: 400;
+}
+
+/* =====================================================
+   TAB 1 — EXPLORE OVERVIEW (placeholder)
+   ===================================================== */
+#page-explore {
+  display: flex; flex-direction: column;
+}
+
+.placeholder-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 16px;
+}
+
+.glass-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 8px 40px rgba(0,0,0,0.4);
+  overflow: hidden;
+}
+.glass-card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex; justify-content: space-between; align-items: center;
+  background: rgba(255,255,255,0.02);
+}
+.glass-card-title {
+  font-family: 'Fraunces', serif;
+  font-size: 14px; font-weight: 600; color: #eae6de;
+}
+.glass-card-meta { font-size: 11px; color: rgba(255,255,255,0.22); }
+.glass-card-body { padding: 20px; }
+
+/* Placeholder shimmer state */
+.placeholder-block {
+  border-radius: 6px;
+  background: rgba(255,255,255,0.04);
+  border: 1px dashed rgba(255,255,255,0.08);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 10px; color: rgba(255,255,255,0.18);
+  font-size: 12px; text-align: center; padding: 16px;
+}
+.placeholder-block .ph-icon { font-size: 24px; opacity: 0.3; }
+.placeholder-block .ph-label { font-size: 11px; color: rgba(255,255,255,0.2); }
+.placeholder-block .ph-sublabel { font-size: 10px; color: rgba(255,255,255,0.12); margin-top: 2px; }
+
+.ph-chart { height: 160px; }
+.ph-mini { height: 110px; }
+.ph-table { height: 140px; }
+
+/* Featured placeholder card spans both columns */
+.span-2 { grid-column: span 2; }
+
+/* Coming online banner */
+.explore-banner {
+  background: rgba(200,169,110,0.06);
+  border: 1px solid rgba(200,169,110,0.15);
+  border-radius: 10px;
+  padding: 16px 22px;
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 24px;
+}
+.banner-icon { font-size: 18px; }
+.banner-text { font-size: 13px; color: rgba(255,255,255,0.45); line-height: 1.5; }
+.banner-text strong { color: #c8a96e; font-weight: 600; }
+
+/* =====================================================
+   TAB 2 — MODELS
+   ===================================================== */
+#page-models {}
+
+.model-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.model-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 14px;
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 8px 40px rgba(0,0,0,0.4);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.25s;
+  position: relative;
+}
+.model-card:hover {
+  border-color: rgba(200,169,110,0.3);
+  transform: translateY(-2px);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.09), 0 16px 48px rgba(0,0,0,0.5), 0 0 0 1px rgba(200,169,110,0.12);
+}
+.model-card.available:hover .model-run-btn { opacity: 1; }
+
+/* Colour bar at top of card — gold for available, muted for locked */
+.model-card-bar {
+  height: 3px;
+  background: linear-gradient(90deg, #c8a96e, #a8883e);
+}
+.model-card.locked .model-card-bar {
+  background: rgba(255,255,255,0.08);
+}
+
+.model-card-body { padding: 20px; }
+
+.model-card-top {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 14px;
+}
+.model-type-badge {
+  font-size: 9px; padding: 3px 8px; border-radius: 4px;
+  font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.badge-gold {
+  background: rgba(200,169,110,0.15); color: #c8a96e;
+  border: 1px solid rgba(200,169,110,0.3);
+}
+.badge-muted {
+  background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.25);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+.model-status {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 10px; font-weight: 500;
+}
+.status-dot { width: 5px; height: 5px; border-radius: 50%; }
+.status-live { background: #8ab870; box-shadow: 0 0 5px rgba(138,184,112,0.4); }
+.status-soon { background: rgba(255,255,255,0.2); }
+.status-text-live { color: #8ab870; }
+.status-text-soon { color: rgba(255,255,255,0.25); }
+
+.model-name {
+  font-family: 'Fraunces', serif;
+  font-size: 18px; font-weight: 600; color: #eae6de;
+  margin-bottom: 6px; line-height: 1.2;
+}
+.model-card.locked .model-name { color: rgba(255,255,255,0.35); }
+
+.model-desc {
+  font-size: 12px; color: rgba(255,255,255,0.38);
+  line-height: 1.6; margin-bottom: 18px;
+}
+.model-card.locked .model-desc { color: rgba(255,255,255,0.2); }
+
+/* Mini preview chart area */
+.model-preview {
+  height: 70px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.model-card.locked .model-preview {
+  filter: blur(2px); opacity: 0.3;
+}
+
+.model-card-footer {
+  display: flex; justify-content: space-between; align-items: center;
+}
+.model-tags { display: flex; gap: 5px; }
+.model-tag {
+  font-size: 9px; padding: 2px 7px; border-radius: 3px;
+  color: rgba(255,255,255,0.22);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.07);
+  letter-spacing: 0.03em;
+}
+
+.model-run-btn {
+  font-size: 11px; padding: 7px 18px;
+  background: linear-gradient(135deg, #c8a96e, #a8883e);
+  color: #080d18; border: none; border-radius: 6px;
+  font-weight: 700; cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  box-shadow: 0 2px 12px rgba(200,169,110,0.25);
+  transition: all 0.2s;
+  letter-spacing: 0.01em;
+}
+.model-run-btn:hover { filter: brightness(1.1); }
+
+.model-lock-btn {
+  font-size: 11px; padding: 7px 14px;
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px; cursor: default;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 500;
+}
+
+/* Model count row */
+.models-header-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px;
+}
+.models-count {
+  font-size: 12px; color: rgba(255,255,255,0.25);
+}
+.models-count span { color: #c8a96e; font-weight: 600; }
+
+/* =====================================================
+   TAB 3 — COMING SOON
+   ===================================================== */
+#page-soon {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 60vh;
+}
+
+.soon-container {
+  text-align: center; max-width: 480px;
+}
+.soon-glyph {
+  font-size: 48px; margin-bottom: 24px; opacity: 0.3;
+  display: block;
+}
+.soon-title {
+  font-family: 'Fraunces', serif;
+  font-size: 32px; font-weight: 300;
+  color: #eae6de; margin-bottom: 12px;
+  letter-spacing: -0.02em;
+}
+.soon-title em { color: #c8a96e; font-style: italic; }
+.soon-body {
+  font-size: 14px; color: rgba(255,255,255,0.3);
+  line-height: 1.7; margin-bottom: 32px;
+}
+.soon-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 22px;
+  background: rgba(200,169,110,0.08);
+  border: 1px solid rgba(200,169,110,0.2);
+  border-radius: 8px;
+  font-size: 12px; color: #c8a96e; font-weight: 600;
+  letter-spacing: 0.06em;
+}
+.soon-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #c8a96e; opacity: 0.6;
+  animation: pulse 2s infinite;
+}
+
+/* =====================================================
+   MINI SVG CHARTS (decorative previews in model cards)
+   ===================================================== */
+.chart-svg { width: 100%; height: 100%; }
+
+/* =====================================================
+   SCROLLBAR
+   ===================================================== */
+.page-area::-webkit-scrollbar { width: 4px; }
+.page-area::-webkit-scrollbar-track { background: transparent; }
+.page-area::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+</style>
+</head>
+<body>
+
+<div class="bg-canvas"></div>
+
+<div class="app">
+
+  <!-- ===== TOPBAR ===== -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="brand-mark">Q</div>
+      <span class="brand-name">Quant<span>Lab</span></span>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-meta">
+        <div class="live-dot"></div>
+        <span>Market data live · 14:02 UTC</span>
+      </div>
+      <div class="topbar-avatar">JR</div>
+    </div>
+  </header>
+
+  <!-- ===== TAB BAR ===== -->
+  <nav class="tab-bar">
+    <div class="tab" id="tab-explore" onclick="switchTab('explore')">
+      <span class="tab-icon">◈</span>
+      Explore Overview
+    </div>
+    <div class="tab active" id="tab-models" onclick="switchTab('models')">
+      <span class="tab-icon">⊞</span>
+      Models
+    </div>
+    <div class="tab" id="tab-soon" onclick="switchTab('soon')">
+      <span class="tab-icon">◎</span>
+      Coming Soon
+      <span class="tab-badge">BETA</span>
+    </div>
+  </nav>
+
+  <!-- ===== PAGE CONTENT ===== -->
+  <div class="page-area">
+
+    <!-- TAB 1: Explore Overview -->
+    <div class="tab-page" id="page-explore">
+      <div class="page-header">
+        <h1 class="page-title"><em>Models</em></h1>
+        <p class="page-subtitle">Select a model to run an analysis. More models will be added over time.</p>
+      </div>
+
+      <div class="models-header-row">
+        <div class="models-count"><span>1</span> model available · 2 in development</div>
+      </div>
+
+      <div class="model-grid">
+
+        <div class="model-card available" onclick="openModel('capital-pressure')">
+          <div class="model-card-bar"></div>
+          <div class="model-card-body">
+            <div class="model-card-top">
+              <span class="model-type-badge badge-gold">Cross-Asset</span>
+              <div class="model-status">
+                <div class="status-dot status-live"></div>
+                <span class="status-text-live">Live</span>
+              </div>
+            </div>
+            <div class="model-name">Capital Pressure Model</div>
+            <div class="model-desc">Measures directional pressure across asset classes by analysing momentum, volume, and relative flow signals to identify risk-on / risk-off regimes.</div>
+            <div class="model-preview">
+              <svg class="chart-svg" viewBox="0 0 300 70" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <marker id="arr-gold" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
+                    <polygon points="0 0, 5 2.5, 0 5" fill="rgba(200,169,110,0.7)"/>
+                  </marker>
+                  <marker id="arr-olive" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
+                    <polygon points="0 0, 5 2.5, 0 5" fill="rgba(138,184,112,0.7)"/>
+                  </marker>
+                  <marker id="arr-red" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
+                    <polygon points="0 0, 5 2.5, 0 5" fill="rgba(200,96,96,0.7)"/>
+                  </marker>
+                </defs>
+
+                <!-- ── Top centre: Inputs node ── -->
+                <rect x="112" y="4" width="76" height="16" rx="3"
+                  fill="rgba(200,169,110,0.1)" stroke="rgba(200,169,110,0.55)" stroke-width="1"/>
+                <text x="150" y="15" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="6" fill="rgba(200,169,110,0.85)" font-weight="600">MARKET INPUTS</text>
+
+                <!-- ── Middle row: Momentum | Pressure | Volume ── -->
+                <!-- Momentum -->
+                <rect x="18" y="28" width="60" height="16" rx="3"
+                  fill="rgba(138,184,112,0.08)" stroke="rgba(138,184,112,0.45)" stroke-width="1"/>
+                <text x="48" y="39" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="5.5" fill="rgba(138,184,112,0.8)" font-weight="600">MOMENTUM</text>
+
+                <!-- Pressure -->
+                <rect x="112" y="28" width="76" height="16" rx="3"
+                  fill="rgba(200,169,110,0.08)" stroke="rgba(200,169,110,0.4)" stroke-width="1"/>
+                <text x="150" y="39" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="5.5" fill="rgba(200,169,110,0.75)" font-weight="600">PRESSURE INDEX</text>
+
+                <!-- Volume -->
+                <rect x="222" y="28" width="60" height="16" rx="3"
+                  fill="rgba(200,96,96,0.08)" stroke="rgba(200,96,96,0.45)" stroke-width="1"/>
+                <text x="252" y="39" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="5.5" fill="rgba(200,96,96,0.8)" font-weight="600">VOLUME</text>
+
+                <!-- ── Bottom centre: Output node ── -->
+                <rect x="100" y="52" width="100" height="16" rx="3"
+                  fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.22)" stroke-width="1"/>
+                <text x="150" y="63" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="6" fill="rgba(234,230,222,0.8)" font-weight="600">REGIME SIGNAL</text>
+
+                <!-- ── Arrows: Inputs → each middle node ── -->
+                <!-- to Momentum -->
+                <line x1="120" y1="20" x2="62" y2="28"
+                  stroke="rgba(200,169,110,0.5)" stroke-width="1" marker-end="url(#arr-gold)"/>
+                <!-- to Pressure -->
+                <line x1="150" y1="20" x2="150" y2="28"
+                  stroke="rgba(200,169,110,0.5)" stroke-width="1" marker-end="url(#arr-gold)"/>
+                <!-- to Volume -->
+                <line x1="180" y1="20" x2="238" y2="28"
+                  stroke="rgba(200,169,110,0.5)" stroke-width="1" marker-end="url(#arr-gold)"/>
+
+                <!-- ── Arrows: each middle node → Output ── -->
+                <!-- Momentum → Output -->
+                <line x1="52" y1="44" x2="110" y2="52"
+                  stroke="rgba(138,184,112,0.55)" stroke-width="1" marker-end="url(#arr-olive)"/>
+                <!-- Pressure → Output -->
+                <line x1="150" y1="44" x2="150" y2="52"
+                  stroke="rgba(200,169,110,0.55)" stroke-width="1" marker-end="url(#arr-gold)"/>
+                <!-- Volume → Output -->
+                <line x1="248" y1="44" x2="190" y2="52"
+                  stroke="rgba(200,96,96,0.55)" stroke-width="1" marker-end="url(#arr-red)"/>
+
+              </svg>
+            </div>
+            <div class="model-card-footer">
+              <div class="model-tags">
+                <span class="model-tag">Momentum</span>
+                <span class="model-tag">Pressure</span>
+                <span class="model-tag">Volume</span>
+              </div>
+              <button class="model-run-btn">Open →</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="model-card locked">
+          <div class="model-card-bar"></div>
+          <div class="model-card-body">
+            <div class="model-card-top">
+              <span class="model-type-badge badge-muted">Valuation</span>
+              <div class="model-status">
+                <div class="status-dot status-soon"></div>
+                <span class="status-text-soon">In development</span>
+              </div>
+            </div>
+            <div class="model-name">DCF Valuation Engine</div>
+            <div class="model-desc">Discounted cash flow model with multi-scenario support. Outputs intrinsic value, WACC sensitivity, and terminal value breakdown.</div>
+            <div class="model-preview">
+              <svg class="chart-svg" viewBox="0 0 300 70" preserveAspectRatio="none">
+                <path d="M0,60 L40,55 L80,48 L120,46 L160,36 L200,28 L240,18 L300,10" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5" stroke-dasharray="4,3"/>
+              </svg>
+            </div>
+            <div class="model-card-footer">
+              <div class="model-tags">
+                <span class="model-tag">DCF</span>
+                <span class="model-tag">Scenarios</span>
+                <span class="model-tag">WACC</span>
+              </div>
+              <div class="model-lock-btn">Coming Soon</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="model-card locked">
+          <div class="model-card-bar"></div>
+          <div class="model-card-body">
+            <div class="model-card-top">
+              <span class="model-type-badge badge-muted">Simulation</span>
+              <div class="model-status">
+                <div class="status-dot status-soon"></div>
+                <span class="status-text-soon">In development</span>
+              </div>
+            </div>
+            <div class="model-name">Monte Carlo Simulator</div>
+            <div class="model-desc">Runs thousands of randomised simulations to model outcome distributions, VaR estimates, and probability-weighted scenario analysis.</div>
+            <div class="model-preview">
+              <svg class="chart-svg" viewBox="0 0 300 70" preserveAspectRatio="none">
+                <path d="M0,35 L20,32 L40,38 L60,28 L80,40 L100,22 L120,30 L140,18 L160,26 L180,14 L200,20 L220,12 L240,18 L260,8 L280,14 L300,6" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1" stroke-dasharray="3,3"/>
+                <path d="M0,35 L20,38 L40,42 L60,36 L80,45 L100,38 L120,44 L140,36 L160,42 L180,34 L200,40 L220,32 L240,38 L260,28 L280,34 L300,24" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1" stroke-dasharray="3,3"/>
+                <path d="M0,35 L20,30 L40,34 L60,24 L80,36 L100,18 L120,26 L140,14 L160,20 L180,10 L200,16 L220,8 L240,12 L260,5 L280,9 L300,3" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1" stroke-dasharray="3,3"/>
+              </svg>
+            </div>
+            <div class="model-card-footer">
+              <div class="model-tags">
+                <span class="model-tag">Simulation</span>
+                <span class="model-tag">VaR</span>
+                <span class="model-tag">Risk</span>
+              </div>
+              <div class="model-lock-btn">Coming Soon</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB 2: Models -->
+    <div class="tab-page active" id="page-models">
+      <div class="page-header">
+        <h1 class="page-title">Model <em>Library</em></h1>
+        <p class="page-subtitle">Select a model to run an analysis. More models will be added over time.</p>
+      </div>
+
+      <div class="models-header-row">
+        <div class="models-count"><span>1</span> model available · 2 in development</div>
+      </div>
+
+      <div class="model-grid">
+
+        <!-- MODEL 1: Capital Pressure — AVAILABLE -->
+        <div class="model-card available" onclick="openModel('capital-pressure')">
+          <div class="model-card-bar"></div>
+          <div class="model-card-body">
+            <div class="model-card-top">
+              <span class="model-type-badge badge-gold">Cross-Asset</span>
+              <div class="model-status">
+                <div class="status-dot status-live"></div>
+                <span class="status-text-live">Live</span>
+              </div>
+            </div>
+            <div class="model-name">Capital Pressure Model</div>
+            <div class="model-desc">Measures directional pressure across asset classes by analysing momentum, volume, and relative flow signals to identify risk-on / risk-off regimes.</div>
+            <div class="model-preview">
+              <svg class="chart-svg" viewBox="0 0 300 70" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                  <marker id="arr-gold2" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
+                    <polygon points="0 0, 5 2.5, 0 5" fill="rgba(200,169,110,0.7)"/>
+                  </marker>
+                  <marker id="arr-olive2" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
+                    <polygon points="0 0, 5 2.5, 0 5" fill="rgba(138,184,112,0.7)"/>
+                  </marker>
+                  <marker id="arr-red2" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto">
+                    <polygon points="0 0, 5 2.5, 0 5" fill="rgba(200,96,96,0.7)"/>
+                  </marker>
+                </defs>
+                <rect x="112" y="4" width="76" height="16" rx="3" fill="rgba(200,169,110,0.1)" stroke="rgba(200,169,110,0.55)" stroke-width="1"/>
+                <text x="150" y="15" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="6" fill="rgba(200,169,110,0.85)" font-weight="600">MARKET INPUTS</text>
+                <rect x="18" y="28" width="60" height="16" rx="3" fill="rgba(138,184,112,0.08)" stroke="rgba(138,184,112,0.45)" stroke-width="1"/>
+                <text x="48" y="39" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="5.5" fill="rgba(138,184,112,0.8)" font-weight="600">MOMENTUM</text>
+                <rect x="112" y="28" width="76" height="16" rx="3" fill="rgba(200,169,110,0.08)" stroke="rgba(200,169,110,0.4)" stroke-width="1"/>
+                <text x="150" y="39" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="5.5" fill="rgba(200,169,110,0.75)" font-weight="600">PRESSURE INDEX</text>
+                <rect x="222" y="28" width="60" height="16" rx="3" fill="rgba(200,96,96,0.08)" stroke="rgba(200,96,96,0.45)" stroke-width="1"/>
+                <text x="252" y="39" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="5.5" fill="rgba(200,96,96,0.8)" font-weight="600">VOLUME</text>
+                <rect x="100" y="52" width="100" height="16" rx="3" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.22)" stroke-width="1"/>
+                <text x="150" y="63" text-anchor="middle" font-family="DM Sans,sans-serif" font-size="6" fill="rgba(234,230,222,0.8)" font-weight="600">REGIME SIGNAL</text>
+                <line x1="120" y1="20" x2="62" y2="28" stroke="rgba(200,169,110,0.5)" stroke-width="1" marker-end="url(#arr-gold2)"/>
+                <line x1="150" y1="20" x2="150" y2="28" stroke="rgba(200,169,110,0.5)" stroke-width="1" marker-end="url(#arr-gold2)"/>
+                <line x1="180" y1="20" x2="238" y2="28" stroke="rgba(200,169,110,0.5)" stroke-width="1" marker-end="url(#arr-gold2)"/>
+                <line x1="52" y1="44" x2="110" y2="52" stroke="rgba(138,184,112,0.55)" stroke-width="1" marker-end="url(#arr-olive2)"/>
+                <line x1="150" y1="44" x2="150" y2="52" stroke="rgba(200,169,110,0.55)" stroke-width="1" marker-end="url(#arr-gold2)"/>
+                <line x1="248" y1="44" x2="190" y2="52" stroke="rgba(200,96,96,0.55)" stroke-width="1" marker-end="url(#arr-red2)"/>
+              </svg>
+            </div>
+            <div class="model-card-footer">
+              <div class="model-tags">
+                <span class="model-tag">Momentum</span>
+                <span class="model-tag">Pressure</span>
+                <span class="model-tag">Volume</span>
+              </div>
+              <button class="model-run-btn">Open →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- MODEL 2: Coming Soon -->
+        <div class="model-card locked">
+          <div class="model-card-bar"></div>
+          <div class="model-card-body">
+            <div class="model-card-top">
+              <span class="model-type-badge badge-muted">Valuation</span>
+              <div class="model-status">
+                <div class="status-dot status-soon"></div>
+                <span class="status-text-soon">In development</span>
+              </div>
+            </div>
+            <div class="model-name">DCF Valuation Engine</div>
+            <div class="model-desc">Discounted cash flow model with multi-scenario support. Outputs intrinsic value, WACC sensitivity, and terminal value breakdown.</div>
+            <div class="model-preview">
+              <svg class="chart-svg" viewBox="0 0 300 70" preserveAspectRatio="none">
+                <path d="M0,60 L40,55 L80,48 L120,46 L160,36 L200,28 L240,18 L300,10" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5" stroke-dasharray="4,3"/>
+              </svg>
+            </div>
+            <div class="model-card-footer">
+              <div class="model-tags">
+                <span class="model-tag">DCF</span>
+                <span class="model-tag">Scenarios</span>
+                <span class="model-tag">WACC</span>
+              </div>
+              <div class="model-lock-btn">Coming Soon</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- MODEL 3: Coming Soon -->
+        <div class="model-card locked">
+          <div class="model-card-bar"></div>
+          <div class="model-card-body">
+            <div class="model-card-top">
+              <span class="model-type-badge badge-muted">Simulation</span>
+              <div class="model-status">
+                <div class="status-dot status-soon"></div>
+                <span class="status-text-soon">In development</span>
+              </div>
+            </div>
+            <div class="model-name">Monte Carlo Simulator</div>
+            <div class="model-desc">Runs thousands of randomised simulations to model outcome distributions, VaR estimates, and probability-weighted scenario analysis.</div>
+            <div class="model-preview">
+              <svg class="chart-svg" viewBox="0 0 300 70" preserveAspectRatio="none">
+                <path d="M0,35 L20,32 L40,38 L60,28 L80,40 L100,22 L120,30 L140,18 L160,26 L180,14 L200,20 L220,12 L240,18 L260,8 L280,14 L300,6" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1" stroke-dasharray="3,3"/>
+                <path d="M0,35 L20,38 L40,42 L60,36 L80,45 L100,38 L120,44 L140,36 L160,42 L180,34 L200,40 L220,32 L240,38 L260,28 L280,34 L300,24" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1" stroke-dasharray="3,3"/>
+                <path d="M0,35 L20,30 L40,34 L60,24 L80,36 L100,18 L120,26 L140,14 L160,20 L180,10 L200,16 L220,8 L240,12 L260,5 L280,9 L300,3" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="1" stroke-dasharray="3,3"/>
+              </svg>
+            </div>
+            <div class="model-card-footer">
+              <div class="model-tags">
+                <span class="model-tag">Simulation</span>
+                <span class="model-tag">VaR</span>
+                <span class="model-tag">Risk</span>
+              </div>
+              <div class="model-lock-btn">Coming Soon</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB 3: Coming Soon -->
+    <div class="tab-page" id="page-soon">
+      <div class="soon-container">
+        <span class="soon-glyph">◎</span>
+        <h2 class="soon-title">Something is <em>coming</em></h2>
+        <p class="soon-body">This section is reserved for upcoming features — news feeds, macro event calendars, and live data integrations. Check back as the platform evolves.</p>
+        <div class="soon-badge">
+          <div class="soon-dot"></div>
+          IN DEVELOPMENT
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end page-area -->
+</div><!-- end app (landing) -->
+
+
+<!-- =====================================================
+     MODEL DASHBOARD — Capital Pressure Model
+     ===================================================== -->
+<div id="model-dashboard" style="display:none; position:fixed; inset:0; z-index:50;">
+
+<style>
+/* ---- Model shell ---- */
+.md-shell {
+  display: flex; flex-direction: column;
+  height: 100vh; width: 100vw;
+  background: #080d18;
+  position: relative;
+  font-family: 'DM Sans', sans-serif;
+  animation: mdEnter 0.3s ease;
+}
+@keyframes mdEnter {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Model topbar ---- */
+.md-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px; height: 58px; flex-shrink: 0;
+  background: rgba(8,13,24,0.8);
+  backdrop-filter: blur(28px);
+  border-bottom: 1px solid rgba(200,169,110,0.18);
+}
+.md-topbar-left { display: flex; align-items: center; gap: 16px; }
+.md-back-btn {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 14px; border-radius: 6px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.45); font-size: 12px; font-weight: 500;
+  cursor: pointer; transition: all 0.2s;
+  font-family: 'DM Sans', sans-serif;
+}
+.md-back-btn:hover { border-color: rgba(200,169,110,0.35); color: #c8a96e; background: rgba(200,169,110,0.06); }
+.md-divider-v { width: 1px; height: 22px; background: rgba(255,255,255,0.08); }
+.md-model-label { display: flex; align-items: center; gap: 10px; }
+.md-model-badge {
+  font-size: 9px; padding: 3px 8px; border-radius: 4px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  background: rgba(200,169,110,0.12); color: #c8a96e;
+  border: 1px solid rgba(200,169,110,0.25);
+}
+.md-model-name {
+  font-family: 'Fraunces', serif; font-size: 16px;
+  font-weight: 600; color: #eae6de; letter-spacing: -0.01em;
+}
+.md-topbar-right { display: flex; align-items: center; gap: 10px; }
+.md-live { display: flex; align-items: center; gap: 6px; font-size: 11px; color: rgba(255,255,255,0.25); }
+.md-live-dot { width: 5px; height: 5px; border-radius: 50%; background: #8ab870; box-shadow: 0 0 5px rgba(138,184,112,0.5); animation: pulse 2.5s infinite; }
+.md-run-btn {
+  padding: 7px 18px; font-size: 12px; font-weight: 700;
+  background: linear-gradient(135deg, #c8a96e, #a8883e);
+  color: #080d18; border: none; border-radius: 6px;
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+  box-shadow: 0 2px 12px rgba(200,169,110,0.25);
+  transition: filter 0.2s;
+}
+.md-run-btn:hover { filter: brightness(1.1); }
+
+/* ---- Metrics strip ---- */
+.md-metrics {
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  background: rgba(255,255,255,0.025);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+.md-metric { padding: 12px 22px; border-right: 1px solid rgba(255,255,255,0.05); }
+.md-metric:last-child { border-right: none; }
+.md-metric-lbl { font-size: 9px; color: rgba(255,255,255,0.25); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 5px; font-weight: 500; }
+.md-metric-val { font-family: 'Fraunces', serif; font-size: 20px; color: #eae6de; font-weight: 600; }
+.md-metric-val.pos { color: #8ab870; }
+.md-metric-val.neg { color: #c86060; }
+.md-metric-delta { font-size: 10px; margin-top: 3px; font-weight: 500; }
+.md-metric-delta.pos { color: #8ab870; }
+.md-metric-delta.neg { color: #c86060; }
+.md-metric-delta.neu { color: rgba(255,255,255,0.2); }
+
+/* ---- Body layout ---- */
+.md-body {
+  display: grid;
+  grid-template-columns: 200px 1fr 260px;
+  flex: 1; min-height: 0;
+  overflow: hidden;
+  transition: grid-template-columns 0.25s ease;
+}
+.md-body.hydro-mode .md-chart-container {
+  padding: 6px 8px;
+}
+.md-body.hydro-mode #view-hydro {
+  height: 100%;
+}
+.md-body.hydro-mode .md-right {
+  overflow: hidden;
+  border-left: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+/* ---- Left sidebar / view nav ---- */
+.md-sidenav {
+  background: rgba(6,10,22,0.75);
+  backdrop-filter: blur(24px);
+  border-right: 1px solid rgba(255,255,255,0.07);
+  display: flex; flex-direction: column;
+  padding: 20px 0;
+  overflow-y: auto;
+}
+.md-sidenav-label {
+  font-size: 9px; color: rgba(255,255,255,0.18);
+  letter-spacing: 0.16em; text-transform: uppercase;
+  padding: 0 18px 8px; font-weight: 600;
+}
+.md-view-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 18px; font-size: 12px; font-weight: 500;
+  color: rgba(255,255,255,0.3); cursor: pointer;
+  border-left: 2px solid transparent;
+  transition: all 0.18s;
+}
+.md-view-item:hover { color: rgba(255,255,255,0.65); background: rgba(255,255,255,0.04); }
+.md-view-item.active { color: #eae6de; background: rgba(200,169,110,0.08); border-left-color: #c8a96e; }
+.md-view-item .vi-icon { font-size: 14px; width: 18px; text-align: center; }
+.md-view-desc { font-size: 9px; color: rgba(255,255,255,0.18); padding: 2px 18px 12px 46px; line-height: 1.4; }
+
+/* ---- Main chart area ---- */
+.md-main {
+  display: flex; flex-direction: column;
+  overflow: hidden; background: transparent;
+}
+.md-view-header {
+  padding: 20px 26px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex; justify-content: space-between; align-items: flex-end;
+  flex-shrink: 0;
+}
+.md-view-title { font-family: 'Fraunces', serif; font-size: 20px; font-weight: 300; color: #eae6de; }
+.md-view-title em { font-style: italic; color: #c8a96e; }
+.md-view-meta { font-size: 11px; color: rgba(255,255,255,0.22); }
+.md-view-controls { display: flex; gap: 6px; }
+.md-ctrl-btn {
+  padding: 5px 12px; font-size: 11px; font-weight: 500;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.35); border-radius: 5px; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; transition: all 0.18s;
+}
+.md-ctrl-btn:hover { border-color: rgba(200,169,110,0.35); color: #c8a96e; }
+.md-ctrl-btn.active { background: rgba(200,169,110,0.12); border-color: rgba(200,169,110,0.35); color: #c8a96e; }
+
+.md-chart-container {
+  flex: 1; overflow-y: auto; padding: 22px 26px;
+}
+.md-chart-container::-webkit-scrollbar { width: 3px; }
+.md-chart-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 2px; }
+
+/* view panels */
+.md-view-panel { display: none; }
+.md-view-panel.active { display: block; }
+
+/* Chart label */
+.md-chart-lbl {
+  font-size: 10px; color: rgba(255,255,255,0.22);
+  letter-spacing: 0.08em; text-transform: uppercase;
+  margin-bottom: 20px;
+}
+
+/* ---- Diverging bar chart ---- */
+.bar-row {
+  display: flex; align-items: center; margin-bottom: 11px;
+}
+.bar-label {
+  font-size: 12px; width: 108px; text-align: right;
+  padding-right: 14px; color: rgba(255,255,255,0.4);
+  flex-shrink: 0; font-weight: 500;
+}
+.bar-label.pos { color: #8ab870; }
+.bar-label.neg { color: #c86060; }
+.bar-track { flex: 1; height: 26px; position: relative; display: flex; align-items: center; }
+.bar-zero { position: absolute; left: 50%; top: 3px; bottom: 3px; width: 1px; background: rgba(255,255,255,0.1); }
+.bar-fill { height: 20px; position: absolute; border-radius: 3px; transition: width 0.7s cubic-bezier(0.4,0,0.2,1); }
+.bar-fill.pos { left: 50%; background: rgba(138,184,112,0.2); border: 1px solid rgba(138,184,112,0.45); box-shadow: 0 0 10px rgba(138,184,112,0.07); }
+.bar-fill.neg { right: 50%; background: rgba(200,96,96,0.18); border: 1px solid rgba(200,96,96,0.4); box-shadow: 0 0 10px rgba(200,96,96,0.07); }
+.bar-val { font-size: 10px; position: absolute; font-weight: 600; white-space: nowrap; }
+.bar-val.pos { color: #8ab870; left: calc(50% + var(--w) + 7px); }
+.bar-val.neg { color: #c86060; right: calc(50% + var(--w) + 7px); }
+.bar-separator { height: 1px; background: rgba(255,255,255,0.06); margin: 10px 0 12px; }
+.bar-axis { display: flex; justify-content: space-between; padding-top: 8px; font-size: 9px; color: rgba(255,255,255,0.18); letter-spacing: 0.04em; }
+
+/* Placeholder panels */
+.md-placeholder {
+  height: 220px; border-radius: 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px dashed rgba(255,255,255,0.08);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 10px;
+  color: rgba(255,255,255,0.18); font-size: 12px;
+}
+.md-placeholder .ph-icon { font-size: 28px; opacity: 0.25; }
+.md-placeholder .ph-sub { font-size: 10px; color: rgba(255,255,255,0.12); margin-top: 2px; }
+
+/* ---- Right panel ---- */
+.md-right {
+  background: rgba(6,10,22,0.6);
+  backdrop-filter: blur(24px);
+  border-left: 1px solid rgba(255,255,255,0.07);
+  display: flex; flex-direction: column;
+  overflow-y: auto; gap: 0;
+}
+.md-right::-webkit-scrollbar { width: 3px; }
+.md-right::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.06); }
+
+.md-panel {
+  padding: 18px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.md-panel-title {
+  font-family: 'Fraunces', serif; font-size: 13px; font-weight: 600;
+  color: #eae6de; margin-bottom: 14px;
+}
+
+/* Signal rows */
+.sig-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.sig-row:last-child { border-bottom: none; }
+.sig-name { font-size: 12px; color: rgba(255,255,255,0.55); font-weight: 500; }
+.sig-badges { display: flex; gap: 4px; }
+.sbadge {
+  font-size: 9px; padding: 2px 7px; border-radius: 4px; font-weight: 600; letter-spacing: 0.03em;
+}
+.sbadge.sp { background: rgba(138,184,112,0.16); color: #8ab870; border: 1px solid rgba(138,184,112,0.3); }
+.sbadge.p  { background: rgba(138,184,112,0.09); color: #6a9858; border: 1px solid rgba(138,184,112,0.18); }
+.sbadge.sn { background: rgba(200,96,96,0.18);   color: #d87070; border: 1px solid rgba(200,96,96,0.32); }
+.sbadge.n  { background: rgba(200,96,96,0.1);    color: #c86060; border: 1px solid rgba(200,96,96,0.2); }
+.sbadge.nu { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.28); border: 1px solid rgba(255,255,255,0.09); }
+.sbadge.gold { background: rgba(200,169,110,0.15); color: #c8a96e; border: 1px solid rgba(200,169,110,0.3); }
+
+/* Regime rows */
+.reg-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.reg-row:last-child { border-bottom: none; }
+.reg-label { font-size: 12px; color: rgba(255,255,255,0.4); font-weight: 500; }
+</style>
+
+<div class="md-shell">
+
+  <!-- Topbar -->
+  <div class="md-topbar">
+    <div class="md-topbar-left">
+      <button class="md-back-btn" onclick="closeModel()">← Back</button>
+      <div class="md-divider-v"></div>
+      <div class="md-model-label">
+        <span class="md-model-badge">Cross-Asset</span>
+        <span class="md-model-name">Capital Pressure Model</span>
+      </div>
+    </div>
+    <div class="md-topbar-right">
+      <div class="md-live"><div class="md-live-dot"></div>Live · 14:02 UTC</div>
+      <button class="md-run-btn">↺ Refresh</button>
+    </div>
+  </div>
+
+  <!-- Regime strip -->
+  <div class="md-metrics">
+    <div class="md-metric">
+      <div class="md-metric-lbl">Risk Mode</div>
+      <div class="md-regime-badge sbadge gold" style="font-size:12px;padding:4px 10px;margin-top:4px;display:inline-block;">Risk On</div>
+    </div>
+    <div class="md-metric">
+      <div class="md-metric-lbl">USD Trend</div>
+      <div class="md-regime-badge sbadge n" style="font-size:12px;padding:4px 10px;margin-top:4px;display:inline-block;">Weakening</div>
+    </div>
+    <div class="md-metric">
+      <div class="md-metric-lbl">Rates</div>
+      <div class="md-regime-badge sbadge nu" style="font-size:12px;padding:4px 10px;margin-top:4px;display:inline-block;">Neutral</div>
+    </div>
+    <div class="md-metric">
+      <div class="md-metric-lbl">Vol Regime</div>
+      <div class="md-regime-badge sbadge p" style="font-size:12px;padding:4px 10px;margin-top:4px;display:inline-block;">Low Vol</div>
+    </div>
+    <div class="md-metric">
+      <div class="md-metric-lbl">Commodities</div>
+      <div class="md-regime-badge sbadge sp" style="font-size:12px;padding:4px 10px;margin-top:4px;display:inline-block;">Bid</div>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="md-body">
+
+    <!-- Left nav — new order -->
+    <div class="md-sidenav">
+      <div class="md-sidenav-label">Views</div>
+
+      <div class="md-view-item" id="nav-momentum" onclick="switchView('momentum',this)">
+        <span class="vi-icon">▶</span> Momentum
+      </div>
+      <div class="md-view-desc">Directional score across assets</div>
+
+      <div class="md-view-item" id="nav-volume" onclick="switchView('volume',this)">
+        <span class="vi-icon">⬡</span> Volume
+      </div>
+      <div class="md-view-desc">Relative volume by asset</div>
+
+      <div class="md-view-item" id="nav-returns" onclick="switchView('returns',this)">
+        <span class="vi-icon">△</span> Relative Returns
+      </div>
+      <div class="md-view-desc">Cross-asset return comparison</div>
+
+      <div class="md-view-item" id="nav-cot" onclick="switchView('cot',this)">
+        <span class="vi-icon">⊞</span> COT Positioning
+      </div>
+      <div class="md-view-desc">Institutional stretch vs 100d mean</div>
+
+      <div class="md-view-item" id="nav-pressure" onclick="switchView('pressure',this)">
+        <span class="vi-icon">◈</span> Pressure
+      </div>
+      <div class="md-view-desc">Capital flow pressure score</div>
+
+      <div class="md-view-item active" id="nav-hydro" onclick="switchView('hydro',this)">
+        <span class="vi-icon">∿</span> Hydro Graph
+      </div>
+      <div class="md-view-desc">Coming soon</div>
+    </div>
+
+    <!-- Main chart -->
+    <div class="md-main">
+
+      <!-- View header -->
+      <div class="md-view-header">
+        <div>
+          <div class="md-view-title" id="md-view-title">Hydro <em>Graph</em></div>
+          <div class="md-view-meta" id="md-view-meta">Capital containers · fill = COT positioning z · flow = pressure score</div>
+        </div>
+        <div class="md-view-controls">
+          <button class="md-ctrl-btn active">1D</button>
+          <button class="md-ctrl-btn">5D</button>
+          <button class="md-ctrl-btn">1M</button>
+        </div>
+      </div>
+
+      <!-- Date slider bar -->
+      <div class="md-slider-bar">
+        <div class="slider-left">
+          <span class="slider-snapshot-label" id="snapshot-label">Today</span>
+          <span class="slider-snapshot-date" id="snapshot-date">7 March 2026</span>
+        </div>
+        <div class="slider-track-wrap">
+          <div class="slider-ticks">
+            <span>COVID Crash</span>
+            <span>Peak Hikes</span>
+            <span>AI Rally</span>
+            <span>Today</span>
+          </div>
+          <input type="range" class="date-slider" id="date-slider"
+            min="0" max="3" step="1" value="3"
+            oninput="onSliderChange(this.value)">
+          <div class="slider-dates">
+            <span>Mar 2020</span>
+            <span>Oct 2022</span>
+            <span>Nov 2023</span>
+            <span>Mar 2026</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="md-chart-container">
+
+        <!-- MOMENTUM — static placeholder (not driven by pressure data) -->
+        <div class="md-view-panel" id="view-momentum">
+          <div class="md-chart-lbl">Cross-asset momentum score · normalised [-1, 1]</div>
+          <div class="bar-row"><span class="bar-label pos">Bitcoin</span>
+            <div class="bar-track"><div class="bar-zero"></div>
+              <div class="bar-fill pos" style="width:47%"></div>
+              <span class="bar-val pos" style="--w:47%">+0.94</span></div></div>
+          <div class="bar-row"><span class="bar-label pos">Gold</span>
+            <div class="bar-track"><div class="bar-zero"></div>
+              <div class="bar-fill pos" style="width:30%"></div>
+              <span class="bar-val pos" style="--w:30%">+0.61</span></div></div>
+          <div class="bar-row"><span class="bar-label pos">Oil (WTI)</span>
+            <div class="bar-track"><div class="bar-zero"></div>
+              <div class="bar-fill pos" style="width:14%"></div>
+              <span class="bar-val pos" style="--w:14%">+0.28</span></div></div>
+          <div class="bar-row"><span class="bar-label pos">JSE Equities</span>
+            <div class="bar-track"><div class="bar-zero"></div>
+              <div class="bar-fill pos" style="width:9%"></div>
+              <span class="bar-val pos" style="--w:9%">+0.18</span></div></div>
+          <div class="bar-separator"></div>
+          <div class="bar-row"><span class="bar-label neg">Short Bonds</span>
+            <div class="bar-track"><div class="bar-zero"></div>
+              <div class="bar-fill neg" style="width:8%"></div>
+              <span class="bar-val neg" style="--w:8%">-0.16</span></div></div>
+          <div class="bar-row"><span class="bar-label neg">Long Bonds</span>
+            <div class="bar-track"><div class="bar-zero"></div>
+              <div class="bar-fill neg" style="width:18%"></div>
+              <span class="bar-val neg" style="--w:18%">-0.36</span></div></div>
+          <div class="bar-row"><span class="bar-label neg">Yen</span>
+            <div class="bar-track"><div class="bar-zero"></div>
+              <div class="bar-fill neg" style="width:25%"></div>
+              <span class="bar-val neg" style="--w:25%">-0.50</span></div></div>
+          <div class="bar-row"><span class="bar-label neg">US Equities</span>
+            <div class="bar-track"><div class="bar-zero"></div>
+              <div class="bar-fill neg" style="width:34%"></div>
+              <span class="bar-val neg" style="--w:34%">-0.68</span></div></div>
+          <div class="bar-row"><span class="bar-label neg">EM Bonds</span>
+            <div class="bar-track"><div class="bar-zero"></div>
+              <div class="bar-fill neg" style="width:40%"></div>
+              <span class="bar-val neg" style="--w:40%">-0.80</span></div></div>
+          <div class="bar-axis">
+            <span>-1.0</span><span>-0.75</span><span>-0.5</span><span>-0.25</span>
+            <span>0</span><span>+0.25</span><span>+0.5</span><span>+0.75</span><span>+1.0</span>
+          </div>
+        </div>
+
+        <!-- VOLUME — static placeholder -->
+        <div class="md-view-panel" id="view-volume">
+          <div class="md-chart-lbl">Relative volume vs 30-day average · z-score</div>
+          <div class="bar-row"><span class="bar-label pos">Bitcoin</span>
+            <div class="bar-track"><div class="bar-zero"></div>
+              <div class="bar-fill pos" style="width:48%"></div>
+              <span class="bar-val pos" style="--w:48%">+1.92</span></div></div>
+          <div class="bar-row"><span class="bar-label pos">Oil (WTI)</span>
+            <div class="bar-track"><div class="bar-zero"></div>
+              <div class="bar-fill pos" style="width:20%"></div>
+              <span class="bar-val pos" style="--w:20%">+0.80</span></div></div>
+          <div class="bar-row"><span class="bar-label pos">Gold</span>
+            <div class="bar-track"><div class="bar-zero"></div>
+              <div class="bar-fill pos" style="width:12%"></div>
+              <span class="bar-val pos" style="--w:12%">+0.48</span></div></div>
+          <div class="bar-separator"></div>
+          <div class="bar-row"><span class="bar-label neg">JSE Equities</span>
+            <div class="bar-track"><div class="bar-zero"></div>
+              <div class="bar-fill neg" style="width:6%"></div>
+              <span class="bar-val neg" style="--w:6%">-0.24</span></div></div>
+          <div class="bar-row"><span class="bar-label neg">Yen</span>
+            <div class="bar-track"><div class="bar-zero"></div>
+              <div class="bar-fill neg" style="width:14%"></div>
+              <span class="bar-val neg" style="--w:14%">-0.56</span></div></div>
+          <div class="bar-row"><span class="bar-label neg">Long Bonds</span>
+            <div class="bar-track"><div class="bar-zero"></div>
+              <div class="bar-fill neg" style="width:22%"></div>
+              <span class="bar-val neg" style="--w:22%">-0.88</span></div></div>
+          <div class="bar-row"><span class="bar-label neg">US Equities</span>
+            <div class="bar-track"><div class="bar-zero"></div>
+              <div class="bar-fill neg" style="width:30%"></div>
+              <span class="bar-val neg" style="--w:30%">-1.20</span></div></div>
+          <div class="bar-axis">
+            <span>-2.0</span><span>-1.0</span><span>0</span><span>+1.0</span><span>+2.0</span>
+          </div>
+        </div>
+
+        <!-- RELATIVE RETURNS — static placeholder -->
+        <div class="md-view-panel" id="view-returns">
+          <div class="md-chart-lbl">5-day relative return vs equal-weight benchmark</div>
+          <div class="bar-row"><span class="bar-label pos">Bitcoin</span>
+            <div class="bar-track"><div class="bar-zero"></div>
+              <div class="bar-fill pos" style="width:40%"></div>
+              <span class="bar-val pos" style="--w:40%">+4.2%</span></div></div>
+          <div class="bar-row"><span class="bar-label pos">Gold</span>
+            <div class="bar-track"><div class="bar-zero"></div>
+              <div class="bar-fill pos" style="width:18%"></div>
+              <span class="bar-val pos" style="--w:18%">+1.9%</span></div></div>
+          <div class="bar-row"><span class="bar-label pos">Oil (WTI)</span>
+            <div class="bar-track"><div class="bar-zero"></div>
+              <div class="bar-fill pos" style="width:11%"></div>
+              <span class="bar-val pos" style="--w:11%">+1.1%</span></div></div>
+          <div class="bar-separator"></div>
+          <div class="bar-row"><span class="bar-label neg">Yen</span>
+            <div class="bar-track"><div class="bar-zero"></div>
+              <div class="bar-fill neg" style="width:15%"></div>
+              <span class="bar-val neg" style="--w:15%">-1.5%</span></div></div>
+          <div class="bar-row"><span class="bar-label neg">Long Bonds</span>
+            <div class="bar-track"><div class="bar-zero"></div>
+              <div class="bar-fill neg" style="width:19%"></div>
+              <span class="bar-val neg" style="--w:19%">-1.9%</span></div></div>
+          <div class="bar-row"><span class="bar-label neg">US Equities</span>
+            <div class="bar-track"><div class="bar-zero"></div>
+              <div class="bar-fill neg" style="width:26%"></div>
+              <span class="bar-val neg" style="--w:26%">-2.6%</span></div></div>
+          <div class="bar-row"><span class="bar-label neg">EM Bonds</span>
+            <div class="bar-track"><div class="bar-zero"></div>
+              <div class="bar-fill neg" style="width:32%"></div>
+              <span class="bar-val neg" style="--w:32%">-3.2%</span></div></div>
+          <div class="bar-axis">
+            <span>-5%</span><span>-2.5%</span><span>0</span><span>+2.5%</span><span>+5%</span>
+          </div>
+        </div>
+
+        <!-- COT — driven by real data -->
+        <div class="md-view-panel" id="view-cot">
+          <div class="md-chart-lbl" id="cot-lbl">COT positioning z-score vs 100-day mean · assets with COT data only</div>
+          <div id="cot-bars"></div>
+          <div class="bar-axis">
+            <span>-3σ</span><span>-2σ</span><span>-1σ</span><span>0</span>
+            <span>+1σ</span><span>+2σ</span><span>+3σ</span>
+          </div>
+        </div>
+
+        <!-- PRESSURE — driven by real data -->
+        <div class="md-view-panel" id="view-pressure">
+          <div class="md-chart-lbl" id="pressure-lbl">Capital flow pressure score · fixed scale [-10, +10]</div>
+          <div id="pressure-bars"></div>
+          <div class="bar-axis">
+            <span>-10</span><span>-5</span><span>0</span><span>+5</span><span>+10</span>
+          </div>
+        </div>
+
+        <!-- HYDRO GRAPH — SVG container grid -->
+        <div class="md-view-panel active" id="view-hydro">
+          <div class="hydro-header">
+            <div class="md-chart-lbl" style="margin-bottom:0" id="hydro-sublabel">Capital containers · fill = COT positioning z · flow = pressure score</div>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <div class="hydro-toggle">
+                <button class="hydro-tog-btn" id="tog-grid" onclick="setHydroMode('grid')">⊞ Grid</button>
+                <button class="hydro-tog-btn active" id="tog-rotation" onclick="setHydroMode('rotation')">⇅ Rotation</button>
+              </div>
+              <div class="hydro-toggle">
+                <button class="hydro-tog-btn" id="tog-conf-all" onclick="setConfFilter('all')">All</button>
+                <button class="hydro-tog-btn active" id="tog-conf-med" onclick="setConfFilter('medium')">≥ Medium</button>
+                <button class="hydro-tog-btn" id="tog-conf-high" onclick="setConfFilter('high')">High only</button>
+              </div>
+              <button class="hydro-fs-btn" id="hydro-fs-btn" onclick="toggleHydroFullscreen()">⤢ Fullscreen</button>
+            </div>
+          </div>
+          <div class="hydro-legend" id="hydro-legend-bar">
+            <span class="hydro-leg-item"><span class="hydro-leg-swatch" style="background:rgba(138,184,112,0.35)"></span>Inflow</span>
+            <span class="hydro-leg-item"><span class="hydro-leg-swatch" style="background:rgba(200,96,96,0.35)"></span>Outflow</span>
+            <span class="hydro-leg-item"><span class="hydro-leg-swatch hydro-leg-hatch"></span>COT unknown</span>
+            <span class="hydro-leg-sep">·</span>
+            <span style="font-size:10px;color:rgba(255,255,255,0.22)">Flow pipe width = pressure magnitude</span>
+          </div>
+          <div class="hydro-grid" id="hydro-grid" style="display:none"></div>
+          <div class="hydro-rotation-wrap" id="hydro-rotation" style="display:block;width:100%;height:100%;overflow:auto;"></div>
+        </div>
+
+      </div><!-- end chart container -->
+    </div><!-- end md-main -->
+
+    <!-- Right panel -->
+    <div class="md-right">
+      <div class="md-panel">
+        <div class="md-panel-title">Signal Summary</div>
+        <div id="signal-summary-body"></div>
+      </div>
+    </div>
+
+  </div><!-- end md-body -->
+</div><!-- end md-shell -->
+</div><!-- end model-dashboard -->
+
+
+<style>
+/* ---- Date slider bar ---- */
+.md-slider-bar {
+  display: flex; align-items: center; gap: 24px;
+  padding: 10px 26px;
+  background: rgba(255,255,255,0.02);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+.slider-left { flex-shrink: 0; }
+.slider-snapshot-label {
+  display: block;
+  font-family: 'Fraunces', serif; font-size: 13px;
+  font-weight: 600; color: #c8a96e;
+}
+.slider-snapshot-date {
+  display: block;
+  font-size: 10px; color: rgba(255,255,255,0.25); margin-top: 2px;
+}
+.slider-track-wrap { flex: 1; }
+.slider-ticks {
+  display: flex; justify-content: space-between;
+  margin-bottom: 4px;
+}
+.slider-ticks span {
+  font-size: 9px; color: rgba(255,255,255,0.25);
+  letter-spacing: 0.04em; text-align: center; flex: 1;
+}
+.slider-dates {
+  display: flex; justify-content: space-between;
+  margin-top: 4px;
+}
+.slider-dates span {
+  font-size: 9px; color: rgba(255,255,255,0.18);
+  text-align: center; flex: 1;
+}
+.date-slider {
+  width: 100%; -webkit-appearance: none; appearance: none;
+  height: 3px; border-radius: 2px; outline: none;
+  background: linear-gradient(to right,
+    #c8a96e 0%, #c8a96e calc(var(--pct, 100%)), rgba(255,255,255,0.12) calc(var(--pct, 100%)), rgba(255,255,255,0.12) 100%);
+  cursor: pointer;
+}
+.date-slider::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 14px; height: 14px;
+  border-radius: 50%; background: #c8a96e;
+  border: 2px solid #080d18;
+  box-shadow: 0 0 8px rgba(200,169,110,0.4);
+  cursor: pointer;
+}
+.date-slider::-moz-range-thumb {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: #c8a96e; border: 2px solid #080d18;
+  cursor: pointer;
+}
+
+/* Confidence badge in bar rows */
+.conf-badge {
+  font-size: 8px; padding: 1px 5px; border-radius: 3px;
+  font-weight: 600; letter-spacing: 0.04em; margin-left: 5px;
+  flex-shrink: 0; white-space: nowrap;
+}
+.conf-high   { background: rgba(138,184,112,0.15); color: #8ab870; border: 1px solid rgba(138,184,112,0.35); }
+.conf-medium { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.35); border: 1px solid rgba(255,255,255,0.1); }
+.conf-low    { background: rgba(200,96,96,0.12);   color: #c86060;  border: 1px solid rgba(200,96,96,0.28); }
+.caution-icon { font-size: 10px; margin-left: 5px; opacity: 0.85; flex-shrink: 0; }
+.bar-label-wrap {
+  display: flex; align-items: center; justify-content: flex-end;
+  width: 200px; flex-shrink: 0; padding-right: 14px; gap: 0;
+}
+.bar-label-wrap .bar-label { width: auto; padding-right: 0; flex-shrink: 0; }
+
+/* ---- Hydro graph ---- */
+.hydro-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+.hydro-toggle { display:flex; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); border-radius:6px; overflow:hidden; }
+.hydro-tog-btn { font-size:11px; padding:5px 13px; background:transparent; border:none; color:rgba(255,255,255,0.3); cursor:pointer; font-family:'DM Sans',sans-serif; font-weight:500; transition:all 0.18s; }
+.hydro-tog-btn:hover { color:rgba(255,255,255,0.6); }
+.hydro-tog-btn.active { background:linear-gradient(135deg,#c8a96e,#a8883e); color:#080d18; font-weight:700; }
+.hydro-rotation-wrap::-webkit-scrollbar { height:3px; width:3px; }
+.hydro-rotation-wrap::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.08); border-radius:2px; }
+.hydro-fs-btn { font-size:11px; padding:5px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); color:rgba(255,255,255,0.35); border-radius:5px; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.18s; }
+.hydro-fs-btn:hover { border-color:rgba(200,169,110,0.35); color:#c8a96e; }
+.hydro-legend { display:flex; align-items:center; gap:14px; margin-bottom:8px; flex-wrap:wrap; }
+.hydro-leg-item { display:flex; align-items:center; gap:6px; font-size:10px; color:rgba(255,255,255,0.3); }
+.hydro-leg-swatch { width:12px; height:12px; border-radius:2px; display:inline-block; }
+.hydro-leg-hatch { background:repeating-linear-gradient(45deg,rgba(255,255,255,0.15) 0px,rgba(255,255,255,0.15) 1px,transparent 1px,transparent 5px); border:1px solid rgba(255,255,255,0.2); }
+.hydro-leg-sep { color:rgba(255,255,255,0.12); font-size:12px; }
+.hydro-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,150px)); grid-auto-rows:175px; gap:4px; justify-content:start; }
+.hydro-fullscreen { position:fixed; inset:0; z-index:200; background:rgba(8,13,24,0.98); backdrop-filter:blur(20px); padding:28px 32px; overflow-y:auto; display:none; flex-direction:column; }
+.hydro-fullscreen.open { display:flex; }
+.hydro-fs-topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-shrink:0; }
+.hydro-fs-title { font-family:'Fraunces',serif; font-size:18px; font-weight:300; color:#eae6de; }
+.hydro-fs-title em { font-style:italic; color:#c8a96e; }
+.hydro-fs-close { font-size:12px; padding:6px 16px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); color:rgba(255,255,255,0.45); border-radius:6px; cursor:pointer; font-family:'DM Sans',sans-serif; transition:all 0.18s; }
+.hydro-fs-close:hover { border-color:rgba(200,169,110,0.35); color:#c8a96e; }
+.hydro-fullscreen .hydro-grid { grid-template-columns:repeat(5,1fr); grid-auto-rows:200px; flex:1; }
+@keyframes flowDown { from{stroke-dashoffset:24} to{stroke-dashoffset:0} }
+@keyframes flowUp   { from{stroke-dashoffset:0}  to{stroke-dashoffset:24} }
+@keyframes ripple   { 0%,100%{opacity:0.5;transform:scaleX(1)} 50%{opacity:0.25;transform:scaleX(1.03)} }
+</style>
+
+<!-- Fullscreen hydro overlay -->
+<div class="hydro-fullscreen" id="hydro-fullscreen">
+  <div class="hydro-fs-topbar">
+    <div class="hydro-fs-title">Capital <em>Containers</em></div>
+    <button class="hydro-fs-close" onclick="toggleHydroFullscreen()">✕ Exit Fullscreen</button>
+  </div>
+  <div class="hydro-legend" id="hydro-fs-legend">
+    <span class="hydro-leg-item"><span class="hydro-leg-swatch" style="background:rgba(138,184,112,0.35)"></span>Inflow</span>
+    <span class="hydro-leg-item"><span class="hydro-leg-swatch" style="background:rgba(200,96,96,0.35)"></span>Outflow</span>
+    <span class="hydro-leg-item"><span class="hydro-leg-swatch hydro-leg-hatch"></span>COT unknown</span>
+    <span class="hydro-leg-sep">·</span>
+    <span style="font-size:10px;color:rgba(255,255,255,0.22)">Pipe width = pressure magnitude</span>
+  </div>
+  <div class="hydro-grid" id="hydro-fs-grid"></div>
+</div>
+
+<script>
+/* ================================================================
+   DATA SNAPSHOTS
+   ================================================================ */
+const SNAPSHOTS = [
+  {
+    key: '2020-03-20', label: 'COVID Crash', displayDate: '20 March 2020',
+    data: [
+      { label:'US Short Bonds (SHV)', score:10.00, conf:'HIGH',   pos_z:null,  contrarian:false },
+      { label:'T-Bills 1-3M (BIL)',   score:8.56,  conf:'HIGH',   pos_z:null,  contrarian:false },
+      { label:'US Long Bonds (TLT)',  score:8.39,  conf:'HIGH',   pos_z:null,  contrarian:false },
+      { label:'US Dollar (UUP)',      score:7.81,  conf:'HIGH',   pos_z:null,  contrarian:false },
+      { label:'Gold (GLD)',           score:3.96,  conf:'MEDIUM', pos_z:null,  contrarian:false },
+      { label:'Japanese Yen (FXY)',   score:3.14,  conf:'MEDIUM', pos_z:null,  contrarian:false },
+      { label:'EM USD Bonds (EMB)',   score:-2.28, conf:'LOW',    pos_z:null,  contrarian:false },
+      { label:'Bitcoin (GBTC)',       score:-2.56, conf:'LOW',    pos_z:null,  contrarian:false },
+      { label:'US Equities (SPY)',    score:-3.03, conf:'MEDIUM', pos_z:null,  contrarian:false },
+      { label:'EM LC Bonds (EMLC)',   score:-4.78, conf:'MEDIUM', pos_z:null,  contrarian:false },
+      { label:'Emerging Mkts (EEM)',  score:-5.13, conf:'MEDIUM', pos_z:null,  contrarian:false },
+      { label:'Broad Cmdties (DJP)',  score:-5.22, conf:'MEDIUM', pos_z:null,  contrarian:false },
+      { label:'European Eq. (VGK)',   score:-5.43, conf:'MEDIUM', pos_z:null,  contrarian:false },
+      { label:'Crude Oil (USO)',      score:-6.01, conf:'HIGH',   pos_z:null,  contrarian:false },
+      { label:'SA Equities (EZA)',    score:-9.63, conf:'HIGH',   pos_z:null,  contrarian:false },
+    ]
+  },
+  {
+    key: '2022-10-14', label: 'Peak Rate Hike Cycle', displayDate: '14 October 2022',
+    data: [
+      { label:'US Dollar (UUP)',      score:10.00, conf:'HIGH',   pos_z:null,   contrarian:false },
+      { label:'T-Bills 1-3M (BIL)',   score:9.76,  conf:'HIGH',   pos_z:null,   contrarian:false },
+      { label:'US Short Bonds (SHV)', score:4.24,  conf:'MEDIUM', pos_z:null,   contrarian:false },
+      { label:'EM LC Bonds (EMLC)',   score:2.18,  conf:'LOW',    pos_z:null,   contrarian:false },
+      { label:'Broad Cmdties (DJP)',  score:1.00,  conf:'LOW',    pos_z:null,   contrarian:false },
+      { label:'Gold (GLD)',           score:0.68,  conf:'LOW',    pos_z:-1.39,  contrarian:true  },
+      { label:'US Equities (SPY)',    score:-0.11, conf:'LOW',    pos_z:null,   contrarian:false },
+      { label:'EM USD Bonds (EMB)',   score:-0.37, conf:'LOW',    pos_z:null,   contrarian:false },
+      { label:'Crude Oil (USO)',      score:-1.05, conf:'LOW',    pos_z:-2.33,  contrarian:false },
+      { label:'European Eq. (VGK)',   score:-2.51, conf:'LOW',    pos_z:null,   contrarian:false },
+      { label:'Japanese Yen (FXY)',   score:-2.77, conf:'LOW',    pos_z:0.57,   contrarian:true  },
+      { label:'SA Equities (EZA)',    score:-4.17, conf:'MEDIUM', pos_z:0.39,   contrarian:true  },
+      { label:'Emerging Mkts (EEM)',  score:-5.60, conf:'MEDIUM', pos_z:null,   contrarian:false },
+      { label:'US Long Bonds (TLT)',  score:-8.81, conf:'HIGH',   pos_z:null,   contrarian:false },
+      { label:'Bitcoin (GBTC)',       score:-9.13, conf:'HIGH',   pos_z:1.27,   contrarian:true  },
+    ]
+  },
+  {
+    key: '2023-11-03', label: 'AI Rally', displayDate: '3 November 2023',
+    data: [
+      { label:'US Short Bonds (SHV)', score:2.56,   conf:'LOW',    pos_z:null,   contrarian:false },
+      { label:'T-Bills 1-3M (BIL)',   score:2.12,   conf:'LOW',    pos_z:null,   contrarian:false },
+      { label:'Bitcoin (GBTC)',       score:1.88,   conf:'LOW',    pos_z:-1.24,  contrarian:true  },
+      { label:'US Dollar (UUP)',      score:-1.45,  conf:'LOW',    pos_z:0.96,   contrarian:true  },
+      { label:'Crude Oil (USO)',      score:-1.80,  conf:'LOW',    pos_z:-1.81,  contrarian:false },
+      { label:'Gold (GLD)',           score:-3.52,  conf:'MEDIUM', pos_z:0.47,   contrarian:true  },
+      { label:'EM USD Bonds (EMB)',   score:-3.55,  conf:'MEDIUM', pos_z:null,   contrarian:false },
+      { label:'Broad Cmdties (DJP)',  score:-4.69,  conf:'MEDIUM', pos_z:-0.32,  contrarian:false },
+      { label:'US Equities (SPY)',    score:-4.76,  conf:'MEDIUM', pos_z:1.53,   contrarian:true  },
+      { label:'SA Equities (EZA)',    score:-5.50,  conf:'MEDIUM', pos_z:-0.71,  contrarian:false },
+      { label:'EM LC Bonds (EMLC)',   score:-5.50,  conf:'MEDIUM', pos_z:null,   contrarian:false },
+      { label:'Emerging Mkts (EEM)',  score:-5.78,  conf:'MEDIUM', pos_z:0.91,   contrarian:true  },
+      { label:'European Eq. (VGK)',   score:-7.24,  conf:'HIGH',   pos_z:-1.09,  contrarian:false },
+      { label:'Japanese Yen (FXY)',   score:-8.26,  conf:'HIGH',   pos_z:-0.50,  contrarian:false },
+      { label:'US Long Bonds (TLT)',  score:-10.00, conf:'HIGH',   pos_z:-0.42,  contrarian:false },
+    ]
+  },
+  {
+    key: '2026-03-07', label: 'Today', displayDate: '7 March 2026',
+    data: [
+      { label:'Crude Oil (USO)',      score:9.48,   conf:'HIGH',   pos_z:0.24,   contrarian:false },
+      { label:'Gold (GLD)',           score:3.68,   conf:'MEDIUM', pos_z:-0.50,  contrarian:true  },
+      { label:'Broad Cmdties (DJP)',  score:2.10,   conf:'LOW',    pos_z:1.45,   contrarian:false },
+      { label:'SA Equities (EZA)',    score:-0.52,  conf:'LOW',    pos_z:-0.32,  contrarian:false },
+      { label:'US Dollar (UUP)',      score:-1.36,  conf:'LOW',    pos_z:0.22,   contrarian:true  },
+      { label:'EM LC Bonds (EMLC)',   score:-1.40,  conf:'LOW',    pos_z:null,   contrarian:false },
+      { label:'EM USD Bonds (EMB)',   score:-1.78,  conf:'LOW',    pos_z:null,   contrarian:false },
+      { label:'T-Bills 1-3M (BIL)',   score:-1.87,  conf:'LOW',    pos_z:null,   contrarian:false },
+      { label:'European Eq. (VGK)',   score:-2.01,  conf:'LOW',    pos_z:-0.23,  contrarian:false },
+      { label:'Emerging Mkts (EEM)',  score:-2.30,  conf:'LOW',    pos_z:-0.25,  contrarian:false },
+      { label:'US Long Bonds (TLT)',  score:-2.91,  conf:'LOW',    pos_z:1.41,   contrarian:true  },
+      { label:'Japanese Yen (FXY)',   score:-2.94,  conf:'LOW',    pos_z:-1.49,  contrarian:false },
+      { label:'US Equities (SPY)',    score:-3.07,  conf:'MEDIUM', pos_z:-0.30,  contrarian:false },
+      { label:'US Short Bonds (SHV)', score:-4.07,  conf:'MEDIUM', pos_z:null,   contrarian:false },
+      { label:'Bitcoin (GBTC)',       score:-10.00, conf:'HIGH',   pos_z:1.98,   contrarian:true  },
+    ]
+  }
+];
+
+let currentSnapshot = 3; // default: Today
+let currentView = 'momentum';
+
+/* ---- Render pressure bars ---- */
+function renderPressure(idx) {
+  const snap = SNAPSHOTS[idx];
+  const container = document.getElementById('pressure-bars');
+  container.innerHTML = '';
+  snap.data.forEach(d => {
+    const pos = d.score >= 0;
+    const pct = (Math.abs(d.score) / 10) * 50;
+    const confClass = d.conf === 'HIGH' ? 'conf-high' : d.conf === 'MEDIUM' ? 'conf-medium' : 'conf-low';
+    const cautionHTML = d.contrarian ? '<span class="caution-icon" title="Contrarian signal — institutions positioned against flow">⚠</span>' : '';
+    container.innerHTML += `
+      <div class="bar-row">
+        <div class="bar-label-wrap">
+          <span class="bar-label ${pos ? 'pos' : 'neg'}">${d.label}</span>
+          <span class="conf-badge ${confClass}">${d.conf}</span>
+          ${cautionHTML}
+        </div>
+        <div class="bar-track">
+          <div class="bar-zero"></div>
+          <div class="bar-fill ${pos ? 'pos' : 'neg'}" style="width:${pct}%"></div>
+          <span class="bar-val ${pos ? 'pos' : 'neg'}" style="--w:${pct}%">${pos ? '+' : ''}${d.score.toFixed(2)}</span>
+        </div>
+      </div>`;
+  });
+}
+
+/* ---- Render COT bars (pos_z, skip NaN) ---- */
+function renderCOT(idx) {
+  const snap = SNAPSHOTS[idx];
+  const container = document.getElementById('cot-bars');
+  container.innerHTML = '';
+  const hasCOT = snap.data.filter(d => d.pos_z !== null);
+  if (hasCOT.length === 0) {
+    container.innerHTML = '<div class="md-placeholder" style="height:120px"><span class="ph-icon" style="font-size:20px">—</span><span>No COT data available for this snapshot</span></div>';
+    return;
+  }
+  // Sort by pos_z descending
+  const sorted = [...hasCOT].sort((a,b) => b.pos_z - a.pos_z);
+  sorted.forEach(d => {
+    const pos = d.pos_z >= 0;
+    const pct = (Math.abs(d.pos_z) / 3) * 50; // scale: ±3σ = full bar
+    const clampedPct = Math.min(pct, 50);
+    const cautionHTML = d.contrarian ? '<span class="caution-icon" title="Contrarian — institutions stretched against flow">⚠</span>' : '';
+    container.innerHTML += `
+      <div class="bar-row">
+        <div class="bar-label-wrap">
+          <span class="bar-label ${pos ? 'pos' : 'neg'}">${d.label}</span>
+          ${cautionHTML}
+        </div>
+        <div class="bar-track">
+          <div class="bar-zero"></div>
+          <div class="bar-fill ${pos ? 'pos' : 'neg'}" style="width:${clampedPct}%"></div>
+          <span class="bar-val ${pos ? 'pos' : 'neg'}" style="--w:${clampedPct}%">${pos ? '+' : ''}${d.pos_z.toFixed(2)}σ</span>
+        </div>
+      </div>`;
+  });
+}
+
+/* ---- Render right-panel signal summary ---- */
+function renderSignalSummary(idx) {
+  const snap = SNAPSHOTS[idx];
+  const body = document.getElementById('signal-summary-body');
+  body.innerHTML = '';
+  snap.data.forEach(d => {
+    const pos = d.score >= 0;
+    const confClass = d.conf === 'HIGH' ? (pos ? 'sp' : 'sn') : d.conf === 'MEDIUM' ? (pos ? 'p' : 'n') : 'nu';
+    const dirLabel = pos ? 'Inflow' : 'Outflow';
+    const cautionHTML = d.contrarian ? ' <span title="Contrarian signal">⚠</span>' : '';
+    body.innerHTML += `
+      <div class="sig-row">
+        <span class="sig-name">${d.label}${cautionHTML}</span>
+        <div class="sig-badges">
+          <span class="sbadge ${confClass}">${dirLabel}</span>
+          <span class="sbadge ${d.conf === 'HIGH' ? 'gold' : 'nu'}">${d.conf}</span>
+        </div>
+      </div>`;
+  });
+}
+
+/* ---- Update all dynamic content for a snapshot ---- */
+function updateSnapshot(idx) {
+  currentSnapshot = idx;
+  const snap = SNAPSHOTS[idx];
+  document.getElementById('snapshot-label').textContent = snap.label;
+  document.getElementById('snapshot-date').textContent = snap.displayDate;
+
+  // Update slider fill
+  const slider = document.getElementById('date-slider');
+  const pct = (idx / (SNAPSHOTS.length - 1)) * 100;
+  slider.style.setProperty('--pct', pct + '%');
+
+  renderPressure(idx);
+  renderCOT(idx);
+  renderSignalSummary(idx);
+  renderHydro(idx);
+}
+
+/* ---- Build one SVG container card ---- */
+function buildHydroCard(d, idx) {
+  // SVG layout:
+  //   0..pipeLen        — top pipe (inflow) or empty
+  //   pipeLen..pipeLen+tankH — tank body
+  //   pipeLen+tankH..   — bottom pipe (outflow) + ticker + score
+  const W = 110;
+  const tankW = 92, tankH = 82, tankX = (W - tankW) / 2;
+  const tankRx = 6;
+  const pipeLen = 24; // pipe length above or below tank
+  const pipeCapR = 7; // bulb cap radius
+  const tankY = pipeLen; // tank starts after top pipe space
+
+  // Total SVG height: pipe top + tank + pipe bottom + label space
+  const H = pipeLen + tankH + pipeLen + 28;
+
+  const hasZ = d.pos_z !== null;
+  const inflow = d.score >= 0;
+  const uid = 'h' + idx + '_' + Math.random().toString(36).slice(2,6);
+
+  // Fill: pos_z ±3σ → 8%–92% of tank
+  const fillPct = hasZ
+    ? Math.min(0.92, Math.max(0.08, (d.pos_z + 3) / 6))
+    : 0.5;
+  const fillH   = tankH * fillPct;
+  const fillY   = tankY + tankH - fillH;
+
+  // Pipe width scales with pressure magnitude
+  const pipeStroke = 3 + (Math.abs(d.score) / 10) * 9;
+  const pipeX = W / 2;
+
+  // Colours
+  const waterFill  = inflow ? 'rgba(138,184,112,0.32)' : 'rgba(200,96,96,0.26)';
+  const waterWave  = inflow ? 'rgba(138,184,112,0.6)'  : 'rgba(200,96,96,0.55)';
+  const pipeCol    = inflow ? 'rgba(138,184,112,0.85)' : 'rgba(200,96,96,0.8)';
+  const pipeGlow   = inflow ? 'rgba(138,184,112,0.2)'  : 'rgba(200,96,96,0.18)';
+  const scoreCol   = inflow ? '#8ab870' : '#c86060';
+  const tankStroke = d.contrarian ? 'rgba(200,169,110,0.7)' : 'rgba(255,255,255,0.18)';
+  const tankStrokeW = d.contrarian ? 1.5 : 1;
+
+  const hatchId = 'htch_' + uid;
+  const clipId  = 'clip_' + uid;
+
+  // Ticker extraction
+  const tickerMatch = d.label.match(/\(([^)]+)\)/);
+  const ticker    = tickerMatch ? tickerMatch[1] : '';
+  const shortLabel = d.label.replace(/\s*\([^)]+\)/, '');
+
+  // z-score description
+  const zDesc = !hasZ ? 'NO COT DATA'
+    : Math.abs(d.pos_z) < 0.5 ? 'NEUTRAL'
+    : Math.abs(d.pos_z) < 1.5 ? (d.pos_z > 0 ? 'MODERATE LONG' : 'MODERATE SHORT')
+    : (d.pos_z > 0 ? 'STRETCHED LONG' : 'STRETCHED SHORT');
+
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.style.cssText = 'width:100%;height:100%;display:block;overflow:visible;';
+
+  // Pipe coords
+  const topPipeY1 = 0, topPipeY2 = tankY;
+  const botPipeY1 = tankY + tankH, botPipeY2 = tankY + tankH + pipeLen;
+
+  svg.innerHTML = `
+    <defs>
+      <pattern id="${hatchId}" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(45)">
+        <line x1="0" y1="0" x2="0" y2="7" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+      </pattern>
+      <clipPath id="${clipId}">
+        <rect x="${tankX}" y="${tankY}" width="${tankW}" height="${tankH}" rx="${tankRx}"/>
+      </clipPath>
+    </defs>
+
+    <!-- ── TOP PIPE (inflow) ── -->
+    ${inflow ? `
+      <!-- glow -->
+      <line x1="${pipeX}" y1="${topPipeY1}" x2="${pipeX}" y2="${topPipeY2}"
+        stroke="${pipeGlow}" stroke-width="${pipeStroke + 10}" stroke-linecap="round"/>
+      <!-- animated flow -->
+      <line x1="${pipeX}" y1="${topPipeY1 + pipeCapR*2}" x2="${pipeX}" y2="${topPipeY2}"
+        stroke="${pipeCol}" stroke-width="${pipeStroke}"
+        stroke-dasharray="8,5" style="animation:flowDown 0.65s linear infinite"/>
+      <!-- cap bulb -->
+      <circle cx="${pipeX}" cy="${topPipeY1 + pipeCapR}" r="${pipeCapR}"
+        fill="${pipeCol}" opacity="0.9"/>
+    ` : ''}
+
+    <!-- ── TANK ── -->
+    <rect x="${tankX}" y="${tankY}" width="${tankW}" height="${tankH}" rx="${tankRx}"
+      fill="rgba(8,13,24,0.7)" stroke="${tankStroke}" stroke-width="${tankStrokeW}"/>
+
+    <!-- Water fill -->
+    ${hasZ
+      ? `<rect x="${tankX}" y="${fillY}" width="${tankW}" height="${fillH}"
+           fill="${waterFill}" clip-path="url(#${clipId})"/>
+         <!-- wave -->
+         <ellipse cx="${tankX + tankW/2}" cy="${fillY}" rx="${tankW/2 - 3}" ry="3"
+           fill="${waterWave}" opacity="0.7"
+           style="animation:ripple 2.8s ease-in-out infinite;transform-origin:${tankX+tankW/2}px ${fillY}px"/>
+         <!-- neutral line -->
+         <line x1="${tankX+4}" y1="${tankY+tankH/2}" x2="${tankX+tankW-4}" y2="${tankY+tankH/2}"
+           stroke="rgba(255,255,255,0.1)" stroke-width="0.75" stroke-dasharray="4,3"/>`
+      : `<rect x="${tankX}" y="${tankY}" width="${tankW}" height="${tankH}" rx="${tankRx}"
+           fill="url(#${hatchId})" clip-path="url(#${clipId})"/>`
+    }
+
+    <!-- ── LABELS INSIDE TANK ── -->
+    <!-- Asset name — large, upper centre -->
+    <text x="${W/2}" y="${tankY + tankH * 0.38}"
+      text-anchor="middle" dominant-baseline="middle"
+      font-family="DM Sans,sans-serif" font-size="11" font-weight="700"
+      fill="rgba(255,255,255,0.92)">
+      ${shortLabel}
+    </text>
+
+    <!-- z-score bottom-left -->
+    <text x="${tankX + 6}" y="${tankY + tankH - 8}"
+      font-family="DM Sans,sans-serif" font-size="7.5" font-weight="700"
+      fill="${hasZ ? 'rgba(255,255,255,0.6)' : 'rgba(255,255,255,0.22)'}">
+      z ${hasZ ? (d.pos_z >= 0 ? '+' : '') + d.pos_z.toFixed(2) : '—'}
+    </text>
+
+    <!-- z description bottom-right -->
+    <text x="${tankX + tankW - 6}" y="${tankY + tankH - 8}"
+      text-anchor="end"
+      font-family="DM Sans,sans-serif" font-size="6.5" font-weight="600"
+      fill="rgba(255,255,255,0.28)" letter-spacing="0.04em">
+      ${zDesc}
+    </text>
+
+    <!-- Caution icon top-right -->
+    ${d.contrarian
+      ? `<text x="${tankX+tankW-6}" y="${tankY+14}" font-size="10" text-anchor="end"
+           fill="rgba(200,169,110,0.85)">⚠</text>`
+      : ''}
+
+    <!-- ── BOTTOM PIPE (outflow) ── -->
+    ${!inflow ? `
+      <!-- glow -->
+      <line x1="${pipeX}" y1="${botPipeY1}" x2="${pipeX}" y2="${botPipeY2}"
+        stroke="${pipeGlow}" stroke-width="${pipeStroke + 10}" stroke-linecap="round"/>
+      <!-- animated flow -->
+      <line x1="${pipeX}" y1="${botPipeY1}" x2="${pipeX}" y2="${botPipeY2 - pipeCapR*2}"
+        stroke="${pipeCol}" stroke-width="${pipeStroke}"
+        stroke-dasharray="8,5" style="animation:flowUp 0.65s linear infinite"/>
+      <!-- cap bulb -->
+      <circle cx="${pipeX}" cy="${botPipeY2 - pipeCapR}" r="${pipeCapR}"
+        fill="${pipeCol}" opacity="0.9"/>
+    ` : `
+      <!-- inflow: small stub at bottom -->
+      <line x1="${pipeX}" y1="${botPipeY1}" x2="${pipeX}" y2="${botPipeY1 + 8}"
+        stroke="rgba(255,255,255,0.06)" stroke-width="2"/>
+    `}
+
+    <!-- ── TICKER + SCORE below ── -->
+    <text x="${W/2}" y="${H - 16}"
+      text-anchor="middle"
+      font-family="DM Sans,sans-serif" font-size="7.5" font-weight="500"
+      fill="rgba(255,255,255,0.2)" letter-spacing="0.1em">
+      ${ticker}
+    </text>
+    <text x="${W/2}" y="${H - 3}"
+      text-anchor="middle"
+      font-family="Fraunces,serif" font-size="13" font-weight="600"
+      fill="${scoreCol}">
+      ${inflow ? '+' : ''}${d.score.toFixed(2)}
+    </text>
+  `;
+
+  const wrapper = document.createElement('div');
+  wrapper.style.cssText = `
+    background: transparent;
+    border: none;
+    padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    cursor: default;
+  `;
+  wrapper.appendChild(svg);
+  return wrapper;
+}
+
+/* ---- Render hydro grid ---- */
+function renderHydro(idx) {
+  const snap = SNAPSHOTS[idx];
+  // Grid view
+  const grid = document.getElementById('hydro-grid');
+  if (grid) {
+    grid.innerHTML = '';
+    const sorted = [...filteredData(snap.data)].sort((a,b) => b.score - a.score);
+    sorted.forEach((d, i) => grid.appendChild(buildHydroCard(d, i)));
+  }
+  // Fullscreen grid
+  const fsGrid = document.getElementById('hydro-fs-grid');
+  if (fsGrid) {
+    fsGrid.innerHTML = '';
+    const sorted = [...filteredData(snap.data)].sort((a,b) => b.score - a.score);
+    sorted.forEach((d, i) => fsGrid.appendChild(buildHydroCard(d, i)));
+  }
+  // Rotation view
+  renderHydroRotation(idx);
+}
+
+/* ---- Build rotation diagram SVG ---- */
+function renderHydroRotation(idx) {
+  const container = document.getElementById('hydro-rotation');
+  if (!container) return;
+  const snap = SNAPSHOTS[idx];
+
+  // Split and sort alphabetically
+  const outflows = filteredData(snap.data).filter(d => d.score < 0).sort((a,b) => a.label.localeCompare(b.label));
+  const inflows  = filteredData(snap.data).filter(d => d.score >= 0).sort((a,b) => a.label.localeCompare(b.label));
+
+  // Layout constants
+  const CARD_W = 72, CARD_H = 54, CARD_RX = 5;
+  const GAP = 10;
+  const PIPE_H = 36;
+  const BUCKET_H = 52;
+  const SCORE_H = 28; // space for ticker+score above/below tank
+  const PAD_X = 24, PAD_Y = 10;
+
+  const maxCols = Math.max(outflows.length, inflows.length, 1);
+  const VW = 1000; // fixed coordinate space — SVG scales to fill container
+
+  // Y positions (top-down: outflow score → outflow tank → pipe → bucket → pipe → inflow tank → inflow score)
+  const yOutScore = PAD_Y;
+  const yOutTop   = yOutScore + SCORE_H;
+  const yOutBot   = yOutTop + CARD_H;
+  const yBucketT  = yOutBot + PIPE_H;
+  const yBucketB  = yBucketT + BUCKET_H;
+  const yInTop    = yBucketB + PIPE_H;
+  const yInBot    = yInTop + CARD_H;
+  const yInScore  = yInBot + SCORE_H;
+  const VH        = yInScore + PAD_Y;
+
+  const bucketX = PAD_X;
+  const bucketW = VW - PAD_X * 2;
+
+  function rowXs(assets) {
+    const total = assets.length * (CARD_W + GAP) - GAP;
+    const start = (VW - total) / 2;
+    return assets.map((_, i) => start + i * (CARD_W + GAP));
+  }
+
+  const outXs = rowXs(outflows);
+  const inXs  = rowXs(inflows);
+
+  // Bucket fill (decorative ~42%)
+  const bFillH = BUCKET_H * 0.42;
+  const bFillY = yBucketT + BUCKET_H - bFillH;
+
+  let s = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VW} ${VH}"
+    style="width:100%;display:block;">
+  <defs>
+    <pattern id="roth" patternUnits="userSpaceOnUse" width="7" height="7" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="7" stroke="rgba(255,255,255,0.12)" stroke-width="2"/>
+    </pattern>
+    <clipPath id="rbclip"><rect x="${bucketX}" y="${yBucketT}" width="${bucketW}" height="${BUCKET_H}" rx="5"/></clipPath>
+    ${[...outflows,...inflows].map((_,i)=>`<clipPath id="rc${idx}_${i}"><rect x="0" y="0" width="${CARD_W}" height="${CARD_H}" rx="${CARD_RX}"/></clipPath>`).join('')}
+  </defs>`;
+
+  // ── CENTRAL BUCKET ──
+  s += `
+  <rect x="${bucketX}" y="${yBucketT}" width="${bucketW}" height="${BUCKET_H}" rx="5"
+    fill="rgba(8,13,24,0.85)" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+  <rect x="${bucketX}" y="${bFillY}" width="${bucketW}" height="${bFillH}"
+    fill="rgba(100,140,180,0.18)" clip-path="url(#rbclip)"/>
+  <ellipse cx="${bucketX + bucketW/2}" cy="${bFillY}" rx="${bucketW/2 - 4}" ry="3"
+    fill="rgba(100,160,200,0.3)" style="animation:ripple 3s ease-in-out infinite;transform-origin:${bucketX+bucketW/2}px ${bFillY}px"/>
+  <text x="${VW/2}" y="${yBucketT + BUCKET_H/2 + 4}" text-anchor="middle"
+    font-family="DM Sans,sans-serif" font-size="9.5" font-weight="700"
+    fill="rgba(255,255,255,0.2)" letter-spacing="0.12em">CAPITAL ROTATION POOL</text>`;
+
+  // ── OUTFLOW CARDS + PIPES (top row → bucket) ──
+  outflows.forEach((d, i) => {
+    const cx = outXs[i] + CARD_W / 2;
+    const hasZ = d.pos_z !== null;
+    const fillPct = hasZ ? Math.min(0.92, Math.max(0.08, (d.pos_z + 3) / 6)) : 0.5;
+    const fH = CARD_H * fillPct;
+    const pipeW = 2 + (Math.abs(d.score) / 10) * 8;
+    const shortLabel = d.label.replace(/\s*\([^)]+\)/, '');
+    const ticker = d.label.match(/\(([^)]+)\)/)?.[1] || '';
+    const tankStroke = d.contrarian ? 'rgba(200,169,110,0.7)' : 'rgba(255,255,255,0.18)';
+
+    // Score above tank
+    s += `
+    <text x="${cx}" y="${yOutScore + 10}" text-anchor="middle"
+      font-family="DM Sans,sans-serif" font-size="7.5" fill="rgba(255,255,255,0.2)" letter-spacing="0.08em">${ticker}</text>
+    <text x="${cx}" y="${yOutScore + 23}" text-anchor="middle"
+      font-family="Fraunces,serif" font-size="12" font-weight="600" fill="#c86060">${d.score.toFixed(2)}</text>`;
+
+    // Pipe: tank bottom → bucket top
+    s += `
+    <line x1="${cx}" y1="${yOutBot}" x2="${cx}" y2="${yBucketT}"
+      stroke="rgba(200,96,96,0.65)" stroke-width="${pipeW}"
+      stroke-dasharray="8,5" style="animation:flowDown 0.65s linear infinite"/>
+    <line x1="${cx}" y1="${yOutBot}" x2="${cx}" y2="${yBucketT}"
+      stroke="rgba(200,96,96,0.12)" stroke-width="${pipeW+10}" stroke-linecap="round"/>`;
+
+    // Tank
+    s += `<g transform="translate(${outXs[i]},${yOutTop})">
+      <rect x="0" y="0" width="${CARD_W}" height="${CARD_H}" rx="${CARD_RX}"
+        fill="rgba(8,13,24,0.8)" stroke="${tankStroke}" stroke-width="${d.contrarian?1.5:1}"/>
+      ${hasZ
+        ? `<rect x="0" y="${CARD_H-fH}" width="${CARD_W}" height="${fH}"
+             fill="rgba(200,96,96,0.28)" clip-path="url(#rc${idx}_${i})"/>
+           <ellipse cx="${CARD_W/2}" cy="${CARD_H-fH}" rx="${CARD_W/2-2}" ry="2.5" fill="rgba(200,96,96,0.55)"/>`
+        : `<rect x="0" y="0" width="${CARD_W}" height="${CARD_H}" rx="${CARD_RX}"
+             fill="url(#roth)" clip-path="url(#rc${idx}_${i})"/>`}
+      <text x="${CARD_W/2}" y="${CARD_H*0.38}" text-anchor="middle" dominant-baseline="middle"
+        font-family="DM Sans,sans-serif" font-size="9" font-weight="700" fill="rgba(255,255,255,0.9)">${shortLabel}</text>
+      <text x="4" y="${CARD_H-5}" font-family="DM Sans,sans-serif" font-size="6.5" font-weight="600"
+        fill="${hasZ?'rgba(255,255,255,0.55)':'rgba(255,255,255,0.2)'}">z ${hasZ?(d.pos_z>=0?'+':'')+d.pos_z.toFixed(2):'—'}</text>
+      ${d.contrarian?`<text x="${CARD_W-4}" y="13" text-anchor="end" font-size="9" fill="rgba(200,169,110,0.85)">⚠</text>`:''}
+    </g>`;
+  });
+
+  // ── No outflows fallback ──
+  if (outflows.length === 0) {
+    s += `<text x="${VW/2}" y="${yOutTop + CARD_H/2}" text-anchor="middle"
+      font-family="DM Sans,sans-serif" font-size="10" fill="rgba(255,255,255,0.2)">No outflows in this snapshot</text>`;
+  }
+
+  // ── INFLOW CARDS + PIPES (bucket → bottom row) ──
+  inflows.forEach((d, i) => {
+    const ci = outflows.length + i;
+    const cx = inXs[i] + CARD_W / 2;
+    const hasZ = d.pos_z !== null;
+    const fillPct = hasZ ? Math.min(0.92, Math.max(0.08, (d.pos_z + 3) / 6)) : 0.5;
+    const fH = CARD_H * fillPct;
+    const pipeW = 2 + (Math.abs(d.score) / 10) * 8;
+    const shortLabel = d.label.replace(/\s*\([^)]+\)/, '');
+    const ticker = d.label.match(/\(([^)]+)\)/)?.[1] || '';
+    const tankStroke = d.contrarian ? 'rgba(200,169,110,0.7)' : 'rgba(255,255,255,0.18)';
+
+    // Pipe: bucket bottom → tank top
+    s += `
+    <line x1="${cx}" y1="${yBucketB}" x2="${cx}" y2="${yInTop}"
+      stroke="rgba(138,184,112,0.65)" stroke-width="${pipeW}"
+      stroke-dasharray="8,5" style="animation:flowDown 0.65s linear infinite"/>
+    <line x1="${cx}" y1="${yBucketB}" x2="${cx}" y2="${yInTop}"
+      stroke="rgba(138,184,112,0.12)" stroke-width="${pipeW+10}" stroke-linecap="round"/>`;
+
+    // Tank
+    s += `<g transform="translate(${inXs[i]},${yInTop})">
+      <rect x="0" y="0" width="${CARD_W}" height="${CARD_H}" rx="${CARD_RX}"
+        fill="rgba(8,13,24,0.8)" stroke="${tankStroke}" stroke-width="${d.contrarian?1.5:1}"/>
+      ${hasZ
+        ? `<rect x="0" y="${CARD_H-fH}" width="${CARD_W}" height="${fH}"
+             fill="rgba(138,184,112,0.3)" clip-path="url(#rc${idx}_${ci})"/>
+           <ellipse cx="${CARD_W/2}" cy="${CARD_H-fH}" rx="${CARD_W/2-2}" ry="2.5" fill="rgba(138,184,112,0.6)"/>`
+        : `<rect x="0" y="0" width="${CARD_W}" height="${CARD_H}" rx="${CARD_RX}"
+             fill="url(#roth)" clip-path="url(#rc${idx}_${ci})"/>`}
+      <text x="${CARD_W/2}" y="${CARD_H*0.38}" text-anchor="middle" dominant-baseline="middle"
+        font-family="DM Sans,sans-serif" font-size="9" font-weight="700" fill="rgba(255,255,255,0.9)">${shortLabel}</text>
+      <text x="4" y="${CARD_H-5}" font-family="DM Sans,sans-serif" font-size="6.5" font-weight="600"
+        fill="${hasZ?'rgba(255,255,255,0.55)':'rgba(255,255,255,0.2)'}">z ${hasZ?(d.pos_z>=0?'+':'')+d.pos_z.toFixed(2):'—'}</text>
+      ${d.contrarian?`<text x="${CARD_W-4}" y="13" text-anchor="end" font-size="9" fill="rgba(200,169,110,0.85)">⚠</text>`:''}
+    </g>`;
+
+    // Score below tank
+    s += `
+    <text x="${cx}" y="${yInScore - 14}" text-anchor="middle"
+      font-family="DM Sans,sans-serif" font-size="7.5" fill="rgba(255,255,255,0.2)" letter-spacing="0.08em">${ticker}</text>
+    <text x="${cx}" y="${yInScore - 1}" text-anchor="middle"
+      font-family="Fraunces,serif" font-size="12" font-weight="600" fill="#8ab870">+${d.score.toFixed(2)}</text>`;
+  });
+
+  if (inflows.length === 0) {
+    s += `<text x="${VW/2}" y="${yInTop + CARD_H/2}" text-anchor="middle"
+      font-family="DM Sans,sans-serif" font-size="10" fill="rgba(255,255,255,0.2)">No inflows in this snapshot</text>`;
+  }
+
+  s += `</svg>`;
+  container.innerHTML = s;
+}
+
+/* ---- Hydro view mode toggle ---- */
+let hydroMode = 'rotation';
+let confFilter = 'medium';
+
+function setConfFilter(level) {
+  confFilter = level;
+  ['tog-conf-all','tog-conf-med','tog-conf-high'].forEach(id => document.getElementById(id).classList.remove('active'));
+  document.getElementById('tog-conf-' + (level === 'all' ? 'all' : level === 'medium' ? 'med' : 'high')).classList.add('active');
+  renderHydro(currentSnapshot);
+}
+
+function filteredData(data) {
+  if (confFilter === 'all')    return data;
+  if (confFilter === 'medium') return data.filter(d => d.conf !== 'LOW');
+  if (confFilter === 'high')   return data.filter(d => d.conf === 'HIGH');
+  return data;
+}
+
+function setHydroMode(mode) {
+  hydroMode = mode;
+  document.getElementById('tog-grid').classList.toggle('active', mode === 'grid');
+  document.getElementById('tog-rotation').classList.toggle('active', mode === 'rotation');
+  document.getElementById('hydro-grid').style.display = mode === 'grid' ? 'grid' : 'none';
+  document.getElementById('hydro-rotation').style.display = mode === 'rotation' ? 'block' : 'none';
+  if (mode === 'rotation') renderHydroRotation(currentSnapshot);
+}
+
+/* ---- Fullscreen toggle ---- */
+function toggleHydroFullscreen() {
+  const fs = document.getElementById('hydro-fullscreen');
+  fs.classList.toggle('open');
+  if (fs.classList.contains('open')) {
+    renderHydro(currentSnapshot);
+  }
+}
+
+/* ---- Slider input handler ---- */
+function onSliderChange(val) {
+  updateSnapshot(parseInt(val));
+}
+
+/* ---- Landing tab switcher ---- */
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+}
+
+/* ---- Open / close model ---- */
+function openModel(id) {
+  if (id === 'capital-pressure') {
+    document.getElementById('model-dashboard').style.display = 'block';
+    document.querySelector('.md-body').classList.add('hydro-mode');
+    updateSnapshot(3);
+  }
+}
+function closeModel() {
+  document.getElementById('model-dashboard').style.display = 'none';
+}
+
+/* ---- View switcher ---- */
+const viewMeta = {
+  momentum: { title:'Momentum <em>Score</em>',        meta:'Normalised cross-asset momentum · [-1, 1]' },
+  volume:   { title:'Relative <em>Volume</em>',       meta:'Z-score vs 30-day average' },
+  returns:  { title:'Relative <em>Returns</em>',      meta:'5-day return vs equal-weight benchmark' },
+  cot:      { title:'COT <em>Positioning</em>',       meta:'Institutional stretch · z-score vs 100-day mean · COT-reported assets only' },
+  pressure: { title:'Capital Flow <em>Pressure</em>', meta:'Pressure score · fixed scale [-10, +10]' },
+  hydro:    { title:'Hydro <em>Graph</em>',           meta:'In development' },
+};
+
+function switchView(name, el) {
+  document.querySelectorAll('.md-view-item').forEach(e => e.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.md-view-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  const m = viewMeta[name];
+  document.getElementById('md-view-title').innerHTML = m.title;
+  document.getElementById('md-view-meta').textContent = m.meta;
+  currentView = name;
+  // Toggle full-width mode for hydro
+  document.querySelector('.md-body').classList.toggle('hydro-mode', name === 'hydro');
+}
+</script>
+
+</body>
+</html>
